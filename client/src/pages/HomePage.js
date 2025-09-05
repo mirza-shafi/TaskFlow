@@ -92,6 +92,7 @@ export default function HomePage() {
       fontWeight: '600',
       background: 'white',
       color: '#6A5ACD',
+      whiteSpace: 'nowrap'
     },
   };
   
