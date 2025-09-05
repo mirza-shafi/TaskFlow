@@ -1016,3 +1016,133 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+
+/* =================================== */
+/* === HOMEPAGE STYLES === */
+/* =================================== */
+
+.home-page {
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+}
+
+.home-logo {
+  font-size: 24px;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+}
+
+.home-nav-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.home-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+  white-space: nowrap; 
+}
+
+.home-button:hover {
+  transform: scale(1.05);
+}
+
+.home-login-button {
+  background: transparent;
+  color: white;
+}
+
+.home-signup-button {
+  background: white;
+  color: #6A5ACD;
+}
+
+.home-hero {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.home-glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 50px 60px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.home-main-heading {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.home-sub-heading {
+  font-size: 20px;
+  max-width: 600px;
+  margin: 20px auto 30px auto;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.home-cta-button {
+  padding: 15px 35px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 600;
+  background: white;
+  color: #6A5ACD;
+  white-space: nowrap; /* This is the fix that prevents text wrapping */
+  transition: transform 0.2s ease;
+}
+
+.home-cta-button:hover {
+  transform: scale(1.05);
+}
+
+
+/* === HOMEPAGE RESPONSIVE STYLES === */
+@media (max-width: 768px) {
+  .home-header {
+    padding: 20px;
+  }
+  .home-glass-card {
+    padding: 40px 25px;
+  }
+  .home-main-heading {
+    font-size: 32px;
+  }
+  .home-sub-heading {
+    font-size: 16px;
+  }
+  .home-cta-button {
+    padding: 12px 28px;
+    font-size: 16px;
+  }
+}
