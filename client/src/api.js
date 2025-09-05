@@ -1,5 +1,8 @@
-const TASK_BASE = '/api/tasks';
-const USER_BASE = '/api/users';
+// This line checks for the deployment URL and falls back to your local server
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
+const TASK_BASE = `${API_URL}/api/tasks`;
+const USER_BASE = `${API_URL}/api/users`;
 
 // ===============================================
 //           USER FUNCTIONS
@@ -49,8 +52,7 @@ export async function getTasks() {
   return res.json();
 }
 
-// THIS IS THE CORRECTED FUNCTION
-export async function createTask(taskData) { // It now accepts a full taskData object
+export async function createTask(taskData) {
   const token = localStorage.getItem('userToken');
   const res = await fetch(TASK_BASE, {
     method: 'POST',
@@ -58,7 +60,7 @@ export async function createTask(taskData) { // It now accepts a full taskData o
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify(taskData), // It sends the whole object as the body
+    body: JSON.stringify(taskData),
   });
   if (!res.ok) {
      const errorData = await res.json();

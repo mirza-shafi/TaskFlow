@@ -9,8 +9,27 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// ===================================
+// === SECURE CORS CONFIGURATION ===
+// ===================================
+const allowedOrigins = [
+  "http://localhost:3000", // Your local frontend for development
+  "https://shafis-task-flow.vercel.app/" // Your live frontend URL from Vercel
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}));
+// ===================================
+
 app.use(express.json());
 
 // API Routes
@@ -24,9 +43,8 @@ app.get("/", (req, res) => {
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI) // The corrected, simpler connection call
+  .connect(process.env.MONGO_URI)
   .then(() => {
-    // Only start listening for requests after the database connection is successful
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, () => {
       console.log(`✅ MongoDB Connected & Server running on http://localhost:${PORT}`);
@@ -34,5 +52,5 @@ mongoose
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);
-    process.exit(1); // Exit the process with a failure code
+    process.exit(1);
   });
