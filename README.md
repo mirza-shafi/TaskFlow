@@ -73,6 +73,35 @@ A responsive, full-stack task management application built with the MERN stack (
 
 ---
 
+## Code Architecture
+
+The project follows a standard **MERN** mono-repo structure, separating the frontend and backend concerns.
+
+```
+TaskFlow/
+├── client/                 # Frontend React Application
+│   ├── public/            # Static assets
+│   └── src/
+│       ├── api/           # Axios service layers for API communication
+│       ├── components/    # Reusable UI components (TaskCard, KanbanBoard, etc.)
+│       ├── context/       # React Context providers (Auth, Appearance)
+│       ├── pages/         # Route implementations (TodoListPage, SettingsPage, etc.)
+│       ├── types/         # TypeScript definitions
+│       └── utils/         # Helper functions
+│
+├── backend/               # Backend Node.js/Express Application
+│   ├── config/            # Database and App configuration
+│   ├── controllers/       # Route logic and request handling
+│   ├── middleware/        # Auth verification and error handling
+│   ├── models/            # Mongoose Schemas (Task, User, Folder)
+│   ├── routes/            # API endpoint definitions
+│   └── server.js          # Entry point
+│
+└── README.md              # Project documentation
+```
+
+---
+
 ## Getting Started
 
 To get a local copy up and running, follow these simple steps.
