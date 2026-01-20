@@ -12,8 +12,8 @@ import AddTeamModal from '../components/AddTeamModal';
 import ProfileMenu from '../components/ProfileMenu';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { Task, CreateTaskPayload, UpdateTaskPayload } from '../types/task.types';
-import { Folder, CreateFolderPayload } from '../types/folder.types';
-import { Team, CreateTeamPayload } from '../types/team.types';
+import { Folder } from '../types/folder.types';
+import { Team } from '../types/team.types';
 import { motion } from 'framer-motion';
 import { 
   FiCheckSquare, FiInbox, FiCalendar, FiStar, FiPlus, 

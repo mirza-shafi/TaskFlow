@@ -2,6 +2,12 @@ import React from 'react';
 import { Task, TaskPriority } from '../types/task.types';
 import { FiEdit2, FiTrash2, FiClock } from 'react-icons/fi';
 
+interface TaskCardProps {
+  task: Task;
+  onEdit: (task: Task) => void;
+  onDelete: (id: string) => void;
+}
+
 const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
   // Helper function to format the date
   const formatDate = (dateString: string | null): string | null => {

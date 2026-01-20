@@ -5,9 +5,8 @@ import { useAppearance } from '../context/AppearanceContext';
 import * as userApi from '../api/user.api';
 import { uploadAvatar } from '../api/uploadAvatar.api';
 import {
-  FiX, FiUser, FiAward, FiGrid, FiFilter, FiBell, FiClock,
-  FiMonitor, FiMoreHorizontal, FiDownload, FiUsers, FiCommand,
-  FiInfo, FiUpload, FiCheck, FiArrowLeft, FiChevronRight
+  FiX, FiUser, FiGrid, FiBell,
+  FiMonitor, FiInfo, FiUpload, FiArrowLeft, FiChevronRight
 } from 'react-icons/fi';
 import './SettingsPage.css';
 
