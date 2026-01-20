@@ -26,6 +26,24 @@
   "@testing-library/user-event": "^13.5.0",
   
     
+  "@types/node": "^20.10.6",
+  
+    
+  "@types/react": "^18.2.46",
+  
+    
+  "@types/react-dom": "^18.2.18",
+  
+    
+  "ajv": "^8.17.1",
+  
+    
+  "ajv-keywords": "^5.1.0",
+  
+    
+  "axios": "^1.13.2",
+  
+    
   "framer-motion": "^12.23.12",
   
     
@@ -44,6 +62,9 @@
   "react-scripts": "5.0.1",
   
     
+  "typescript": "^5.3.3",
+  
+    
   "web-vitals": "^2.1.4"
   
   },
@@ -54,7 +75,7 @@
   "start": "react-scripts start",
   
     
-  "build": "react-scripts build",
+  "build": "NODE_OPTIONS=--no-experimental-webstorage react-scripts build",
   
     
   "test": "react-scripts test",

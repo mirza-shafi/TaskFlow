@@ -695,23 +695,98 @@ body {
 /* === DRAG AND DROP STATES === */
 /* =================================== */
 
-.task-card.dragging {
-  opacity: 0.6;
-  transform: rotate(2deg) scale(1.02);
-  z-index: 1000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+/* =================================== */
+/* === TICKTICK STYLE TASK CARDS === */
+/* =================================== */
+
+.task-card-v2 {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid transparent;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.droppable-area.drag-over {
-  background-color: rgba(102, 126, 234, 0.08);
-  border: 2px dashed #667eea;
-  border-radius: 12px;
+.task-card-v2:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
 }
 
-.kanban-column.drag-over {
-  background-color: rgba(102, 126, 234, 0.05);
-  border-color: #667eea;
+.task-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+.task-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.task-card-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.task-date-tag {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.task-card-actions-v2 {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.task-card-v2:hover .task-card-actions-v2 {
+  opacity: 1;
+}
+
+.card-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.card-btn:hover {
+  color: #5c6bc0;
+}
+
+.card-btn.delete:hover {
+  color: #ef4444;
+}
+
 
 /* =================================== */
 /* === DARK MODE SUPPORT === */

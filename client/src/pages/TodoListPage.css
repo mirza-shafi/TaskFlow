@@ -1,0 +1,205 @@
+:root {
+  --sidebar-width: 260px;
+  --sidebar-bg: #f5f7fa;
+  --workspace-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --primary-blue: #5c6bc0;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --hover-bg: #edf2f7;
+  --active-bg: #e2e8f0;
+}
+
+.workspace-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--workspace-bg);
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  padding: 0 1.5rem 2rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  color: var(--text-dark);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.nav-item.active {
+  background-color: var(--active-bg);
+  color: var(--primary-blue);
+  border-left-color: var(--primary-blue);
+}
+
+.nav-item-icon {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1.5rem 1.5rem;
+}
+
+.sidebar-section-title {
+  padding: 0 1.5rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Main Content Area */
+.main-workspace {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspace-header {
+  height: 64px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  background: white;
+}
+
+.view-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Board Container */
+.board-wrapper {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-x: auto;
+  background-color: #fcfdfe;
+}
+
+/* Kanban Overrides for TickTick Style */
+.ticktick-kanban {
+  display: flex;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.ticktick-column {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.column-name {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-count {
+  background: var(--border-color);
+  color: var(--text-light);
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* Add Task Button In Column */
+.add-task-inline {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.add-task-inline:hover {
+  background: white;
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 64px;
+  }
+  .nav-item-text, .sidebar-section-title, .sidebar-logo span {
+    display: none;
+  }
+}
