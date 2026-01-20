@@ -5,7 +5,7 @@ import { AppError } from '@/utils/AppError';
 export class TaskService {
   // Get all tasks for a user
   async getUserTasks(userId: string): Promise<ITaskDocument[]> {
-    const tasks = await Task.find({ user: userId }).sort({ createdAt: -1 });
+    const tasks = await Task.find({ user: userId, deletedAt: null }).sort({ createdAt: -1 });
     return tasks;
   }
 
@@ -58,6 +58,46 @@ export class TaskService {
     }
 
     // Check ownership
+    if (task.user.toString() !== userId) {
+      throw new AppError('User not authorized to delete this task', 401);
+    }
+
+    // Soft delete
+    task.deletedAt = new Date();
+    await task.save();
+  }
+
+  // Get trashed tasks
+  async getTrashedTasks(userId: string): Promise<ITaskDocument[]> {
+    const tasks = await Task.find({ user: userId, deletedAt: { $ne: null } }).sort({ deletedAt: -1 });
+    return tasks;
+  }
+
+  // Restore a task
+  async restoreTask(taskId: string, userId: string): Promise<ITaskDocument> {
+    const task = await Task.findById(taskId);
+
+    if (!task) {
+      throw new AppError('Task not found', 404);
+    }
+
+    if (task.user.toString() !== userId) {
+      throw new AppError('User not authorized to restore this task', 401);
+    }
+
+    task.deletedAt = null; // Reset deletedAt
+    const restoredTask = await task.save();
+    return restoredTask;
+  }
+
+  // Permanently delete a task
+  async permanentlyDeleteTask(taskId: string, userId: string): Promise<void> {
+    const task = await Task.findById(taskId);
+
+    if (!task) {
+      throw new AppError('Task not found', 404);
+    }
+
     if (task.user.toString() !== userId) {
       throw new AppError('User not authorized to delete this task', 401);
     }

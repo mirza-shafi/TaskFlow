@@ -1,5 +1,7 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { CreateTaskPayload, TaskPriority } from '../types/task.types';
+import { FiX, FiCalendar, FiFolder, FiUsers, FiAlertCircle } from 'react-icons/fi';
+import './Modal.css';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -39,64 +41,145 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask,
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h2>Add New Task</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Title</label>
-            <input 
-              type="text" 
-              value={title} 
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-              required 
-            />
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="modal-header">
+          <h2 className="modal-title">Add New Task</h2>
+          <button 
+            type="button"
+            className="modal-close-btn"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <FiX />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="modal-body">
+            {/* Title */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="task-title">
+                Task Title <span className="required">*</span>
+              </label>
+              <input 
+                id="task-title"
+                type="text" 
+                className="form-input"
+                placeholder="Enter task title..."
+                value={title} 
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+                required 
+                autoFocus
+              />
+            </div>
+
+            {/* Description */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="task-description">
+                Description
+              </label>
+              <textarea 
+                id="task-description"
+                className="form-textarea"
+                placeholder="Add task details..."
+                rows={4}
+                value={description}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+              />
+            </div>
+
+            {/* Priority */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="task-priority">
+                <FiAlertCircle size={14} />
+                Priority
+              </label>
+              <select 
+                id="task-priority"
+                className="form-select"
+                value={priority} 
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value as TaskPriority)}
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+              </select>
+            </div>
+
+            {/* Due Date */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="task-due-date">
+                <FiCalendar size={14} />
+                Due Date
+              </label>
+              <input 
+                id="task-due-date"
+                type="date"
+                className="form-input"
+                value={dueDate}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
+              />
+            </div>
+
+            <div className="form-grid">
+              {/* Folder */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="task-folder">
+                  <FiFolder size={14} />
+                  Folder
+                </label>
+                <select 
+                  id="task-folder"
+                  className="form-select"
+                  value={folderId} 
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => setFolderId(e.target.value)}
+                >
+                  <option value="">Personal (No Folder)</option>
+                  {folders.map(f => (
+                    <option key={f._id} value={f._id}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Team */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="task-team">
+                  <FiUsers size={14} />
+                  Team
+                </label>
+                <select 
+                  id="task-team"
+                  className="form-select"
+                  value={teamId} 
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => setTeamId(e.target.value)}
+                >
+                  <option value="">Private (No Team)</option>
+                  {teams.map(t => (
+                    <option key={t._id} value={t._id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
-          <div>
-            <label>Description</label>
-            <textarea 
-              rows={4}
-              value={description}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
-            ></textarea>
-          </div>
-          <div>
-            <label>Priority</label>
-            <select value={priority} onChange={(e: ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value as TaskPriority)}>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          <div>
-            <label>Due Date</label>
-            <input 
-              type="date"
-              value={dueDate}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
-            />
-          </div>
-          <div>
-            <label>Folder (Optional)</label>
-            <select value={folderId} onChange={(e: ChangeEvent<HTMLSelectElement>) => setFolderId(e.target.value)}>
-              <option value="">Personal (No Folder)</option>
-              {folders.map(f => (
-                <option key={f._id} value={f._id}>{f.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label>Team Workspace (Optional)</label>
-            <select value={teamId} onChange={(e: ChangeEvent<HTMLSelectElement>) => setTeamId(e.target.value)}>
-              <option value="">Private (No Team)</option>
-              {teams.map(t => (
-                <option key={t._id} value={t._id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="modal-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary">Add Task</button>
+
+          {/* Footer */}
+          <div className="modal-footer">
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+            >
+              Add Task
+            </button>
           </div>
         </form>
       </div>

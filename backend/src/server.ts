@@ -23,22 +23,17 @@ const app: Application = express();
 // === CORS CONFIGURATION ===
 // ===================================
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (config.allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  }
+  origin: true, // Allow all origins
+  credentials: true
 }));
 
 // ===================================
 // === MIDDLEWARE ===
 // ===================================
 app.use(express.json());
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
 
 // ===================================
 // === API ROUTES ===

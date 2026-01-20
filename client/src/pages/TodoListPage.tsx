@@ -5,49 +5,53 @@ import * as teamApi from '../api/team.api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import KanbanBoard from '../components/KanbanBoard';
-import ListView from '../components/ListView';
 import AddTaskModal from '../components/AddTaskModal';
 import EditTaskModal from '../components/EditTaskModal';
+import AddFolderModal from '../components/AddFolderModal';
+import AddTeamModal from '../components/AddTeamModal';
 import ProfileMenu from '../components/ProfileMenu';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { Task, TaskStatus, CreateTaskPayload, UpdateTaskPayload } from '../types/task.types';
-import { DropResult } from '@hello-pangea/dnd';
+import { Task, CreateTaskPayload, UpdateTaskPayload } from '../types/task.types';
+import { Folder, CreateFolderPayload } from '../types/folder.types';
+import { Team, CreateTeamPayload } from '../types/team.types';
 import { motion } from 'framer-motion';
-import { FiCheckSquare, FiInbox, FiCalendar, FiStar, FiPlus, FiFilter, FiLogOut } from 'react-icons/fi';
+import { 
+  FiCheckSquare, FiInbox, FiCalendar, FiStar, FiPlus, 
+  FiList, FiGrid, FiFolder, FiUsers, FiSettings, FiCheckCircle, FiTrash2
+} from 'react-icons/fi';
 import './TodoListPage.css';
 
-interface Column {
-  name: string;
-  items: Task[];
-}
-
-interface Columns {
-  [key: string]: Column;
-}
-
-type SortBy = 'createdAt' | 'dueDate' | 'priority';
-type ViewFilter = 'all' | 'today' | 'upcoming';
+type ViewFilter = 'all' | 'today' | 'upcoming' | 'overdue' | 'completed';
 type WorkspaceView = 'list' | 'kanban';
 
 const TodoListPage: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [columns, setColumns] = useState<Columns>({
-    todo: { name: 'To Do', items: [] },
-    doing: { name: 'In Progress', items: [] },
-    done: { name: 'Done', items: [] },
+  const [columns, setColumns] = useState({
+    todo: { name: 'To Do', items: [] as Task[] },
+    doing: { name: 'In Progress', items: [] as Task[] },
+    review: { name: 'Review', items: [] as Task[] },
+    done: { name: 'Done', items: [] as Task[] },
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState<boolean>(false);
+  const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortBy>('createdAt');
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('list');
-  const [folders, setFolders] = useState<any[]>([]);
-  const [teams, setTeams] = useState<any[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Close sidebar when route changes or width changes (optional optimization)
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [navigate]);
+
+  // Load tasks
   useEffect(() => {
     async function loadTasks() {
       if (!user) return;
@@ -55,9 +59,24 @@ const TodoListPage: React.FC = () => {
         setLoading(true);
         const data = await taskApi.getTasks();
         setTasks(data);
-      } catch (error) {
-        logout();
-        navigate('/login');
+        // Organize tasks into columns
+        const todoItems = data.filter(t => t.status === 'todo');
+        const doingItems = data.filter(t => t.status === 'doing');
+        const reviewItems = data.filter(t => t.status === 'review');
+        const doneItems = data.filter(t => t.status === 'done');
+        setColumns({
+          todo: { name: 'To Do', items: todoItems },
+          doing: { name: 'In Progress', items: doingItems },
+          review: { name: 'Review', items: reviewItems },
+          done: { name: 'Done', items: doneItems },
+        });
+      } catch (error: any) {
+        if (error?.response?.status === 401) {
+          logout();
+          navigate('/login');
+        } else {
+          console.error('Failed to load tasks:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -65,22 +84,72 @@ const TodoListPage: React.FC = () => {
     loadTasks();
   }, [user, logout, navigate]);
 
-  useEffect(() => {
-    async function loadWorkspaceData() {
-      if (!user) return;
-      try {
-        const [folderData, teamData] = await Promise.all([
-          folderApi.getFolders(),
-          teamApi.getTeams()
-        ]);
-        setFolders(folderData);
-        setTeams(teamData);
-      } catch (error) {
-        console.error("Failed to load folders/teams:", error);
-      }
+  // Helper function to check if task is overdue
+  const isOverdue = (task: Task): boolean => {
+    if (!task.dueDate || task.status === 'done') return false;
+    return new Date(task.dueDate) < new Date();
+  };
+
+  // Helper function to check if task is today
+  const isToday = (task: Task): boolean => {
+    if (!task.dueDate) return false;
+    const today = new Date();
+    const taskDate = new Date(task.dueDate);
+    return taskDate.toDateString() === today.toDateString();
+  };
+
+  // Organize tasks into sections
+  const organizedTasks = useMemo(() => {
+    const overdue = tasks.filter(t => isOverdue(t) && t.status !== 'done');
+    const today = tasks.filter(t => isToday(t) && t.status !== 'done' && !isOverdue(t));
+    const upcoming = tasks.filter(t => 
+      t.dueDate && 
+      new Date(t.dueDate) > new Date() && 
+      !isToday(t) && 
+      t.status !== 'done'
+    );
+    const noDate = tasks.filter(t => !t.dueDate && t.status !== 'done');
+    const completed = tasks.filter(t => t.status === 'done');
+
+    return { overdue, today, upcoming, noDate, completed };
+  }, [tasks]);
+
+  // Task CRUD operations
+  const handleAddTask = async (taskData: CreateTaskPayload): Promise<void> => {
+    try {
+      const newTask = await taskApi.createTask(taskData);
+      setTasks([...tasks, newTask]);
+      // Update columns
+      const newColumns = { ...columns };  
+      newColumns[newTask.status].items.push(newTask);
+      setColumns(newColumns);
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error('Failed to add task:', error);
     }
-    loadWorkspaceData();
-  }, [user]);
+  };
+
+  const handleUpdateTask = async (taskId: string, taskData: UpdateTaskPayload): Promise<void> => {
+    try {
+      const updatedTask = await taskApi.updateTask(taskId, taskData);
+      setTasks(tasks.map(t => t._id === taskId ? updatedTask : t));
+      // Update columns
+      const updatedTasks = tasks.map(t => t._id === taskId ? updatedTask : t);
+      const todoItems = updatedTasks.filter(t => t.status === 'todo');
+      const doingItems = updatedTasks.filter(t => t.status === 'doing');
+      const reviewItems = updatedTasks.filter(t => t.status === 'review');
+      const doneItems = updatedTasks.filter(t => t.status === 'done');
+      setColumns({
+        todo: { name: 'To Do', items: todoItems },
+        doing: { name: 'In Progress', items: doingItems },
+        review: { name: 'Review', items: reviewItems },
+        done: { name: 'Done', items: doneItems },
+      });
+      setEditingTask(null);
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  };
 
   const confirmDelete = async (): Promise<void> => {
     if (taskToDelete) {
@@ -89,305 +158,345 @@ const TodoListPage: React.FC = () => {
         setTasks(tasks.filter(task => task._id !== taskToDelete));
         setTaskToDelete(null);
       } catch (error) {
-        console.error("Failed to delete task:", error);
-        setTaskToDelete(null);
+        console.error('Failed to delete task:', error);
       }
     }
   };
 
-  const filteredTasks = useMemo(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    
-    return tasks.filter(task => {
-      if (viewFilter === 'all') return true;
-      if (!task.dueDate) return false;
-      
-      const taskDate = new Date(task.dueDate);
-      taskDate.setHours(0, 0, 0, 0);
-      
-      if (viewFilter === 'today') {
-        return taskDate.getTime() === now.getTime();
-      }
-      if (viewFilter === 'upcoming') {
-        return taskDate.getTime() > now.getTime();
-      }
-      return true;
-    });
-  }, [tasks, viewFilter]);
+  const toggleTaskStatus = async (task: Task): Promise<void> => {
+    const newStatus = task.status === 'done' ? 'todo' : 'done';
+    await handleUpdateTask(task._id, { status: newStatus });
+  };
 
-  const sortedTasks = useMemo(() => {
-    const priorityValues: { [key: string]: number } = { high: 3, medium: 2, low: 1 };
-    return [...filteredTasks].sort((a, b) => {
-      switch (sortBy) {
-        case 'priority':
-          return (priorityValues[b.priority] || 0) - (priorityValues[a.priority] || 0);
-        case 'dueDate':
-          if (!a.dueDate) return 1;
-          if (!b.dueDate) return -1;
-          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-        case 'createdAt':
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-  }, [filteredTasks, sortBy]);
-
-  useEffect(() => {
-    const newColumns: Columns = {
-      todo: { name: 'To Do', items: [] },
-      doing: { name: 'In Progress', items: [] },
-      done: { name: 'Done', items: [] },
-    };
-    sortedTasks.forEach(task => {
-      if (newColumns[task.status]) {
-        newColumns[task.status].items.push(task);
-      }
-    });
-    setColumns(newColumns);
-  }, [sortedTasks]);
-
-  const handleDragEnd = (result: DropResult): void => {
+  // Handle drag and drop for Kanban
+  const handleDragEnd = async (result: any): Promise<void> => {
     if (!result.destination) return;
-    const { source, destination, draggableId } = result;
-    const newColumns = { ...columns };
-    const sourceColumn = newColumns[source.droppableId];
-    const destColumn = newColumns[destination.droppableId];
-    const [removed] = sourceColumn.items.splice(source.index, 1);
-    destColumn.items.splice(destination.index, 0, removed);
-    setColumns(newColumns);
-    taskApi.updateTask(draggableId, { status: destination.droppableId as TaskStatus }).catch(console.error);
-  };
 
-  const handleLogout = (): void => {
-    localStorage.removeItem('userToken');
-    navigate('/');
-    window.location.reload();
-  };
+    const { source, destination } = result;
+    const sourceColumn = columns[source.droppableId as keyof typeof columns];
+    const destColumn = columns[destination.droppableId as keyof typeof columns];
 
-  const handleAddTask = async (taskData: CreateTaskPayload): Promise<void> => {
-    try {
-      const newTask = await taskApi.createTask(taskData);
-      setTasks(prevTasks => [newTask, ...prevTasks]);
-      setIsAddModalOpen(false);
-    } catch (error) {
-      console.error("Failed to add task:", error);
+    if (source.droppableId === destination.droppableId) {
+      const copiedItems = [...sourceColumn.items];
+      const [removed] = copiedItems.splice(source.index, 1);
+      copiedItems.splice(destination.index, 0, removed);
+      setColumns({
+        ...columns,
+        [source.droppableId]: { ...sourceColumn, items: copiedItems }
+      });
+    } else {
+      const sourceItems = [...sourceColumn.items];
+      const destItems = [...destColumn.items];
+      const [removed] = sourceItems.splice(source.index, 1);
+      destItems.splice(destination.index, 0, removed);
+
+      setColumns({
+        ...columns,
+        [source.droppableId]: { ...sourceColumn, items: sourceItems },
+        [destination.droppableId]: { ...destColumn, items: destItems }
+      });
+
+      // Update task status in backend
+      await handleUpdateTask(removed._id, { status: destination.droppableId as any });
     }
   };
 
-  const handleEdit = (task: Task): void => {
-    setEditingTask(task);
-  };
-
-  const handleUpdateTask = async (taskId: string, taskData: UpdateTaskPayload): Promise<void> => {
+  // Folder operations
+  const handleAddFolder = async (folderName: string, color: string): Promise<void> => {
     try {
-      const updatedTask = await taskApi.updateTask(taskId, taskData);
-      setTasks(tasks.map(task => (task._id === taskId ? updatedTask : task)));
-      setEditingTask(null);
+      const newFolder = await folderApi.createFolder({ name: folderName, color, isPrivate: true });
+      setFolders([...folders, newFolder]);
+      setIsAddFolderModalOpen(false);
     } catch (error) {
-      console.error("Failed to update task:", error);
+      console.error('Failed to add folder:', error);
     }
   };
 
-  const handleDeleteRequest = (taskId: string): void => {
-    setTaskToDelete(taskId);
-  };
-
-  const handleToggleStatus = async (task: Task): Promise<void> => {
-    const newStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done';
+  // Team operations
+  const handleCreateTeam = async (teamName: string): Promise<void> => {
     try {
-      const updatedTask = await taskApi.updateTask(task._id, { status: newStatus });
-      setTasks(tasks.map(t => (t._id === task._id ? updatedTask : t)));
+      const newTeam = await teamApi.createTeam({ name: teamName });
+      setTeams([...teams, newTeam]);
+      setIsAddTeamModalOpen(false);
     } catch (error) {
-      console.error("Failed to toggle task status:", error);
+      console.error('Failed to add team:', error);
     }
   };
+
+  // Render task sections
+  const renderTaskSection = (title: string, tasks: Task[], icon?: React.ReactNode) => {
+    if (tasks.length === 0) return null;
+
+    return (
+      <div className="list-section">
+        <div className="section-header">
+          {icon}
+          <span className="section-title">{title}</span>
+          <span className="task-count">{tasks.length}</span>
+        </div>
+        <div className="task-list">
+          {tasks.map((task) => (
+            <motion.div
+              key={task._id}
+              className={`task-item ${task.status === 'done' ? 'completed' : ''}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => setEditingTask(task)}
+            >
+              <div
+                className="task-checkbox"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleTaskStatus(task);
+                }}
+              />
+              <div className="task-content">
+                <div className="task-title">{task.title}</div>
+                {(task.dueDate || task.priority) && (
+                  <div className="task-meta">
+                    {task.dueDate && (
+                      <span>
+                        <FiCalendar size={12} />
+                        {new Date(task.dueDate).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    )}
+                    {task.priority && task.priority !== 'low' && (
+                      <span className={`priority-badge priority-${task.priority}`}>
+                        {task.priority}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="workspace-layout">
-      {/* Sidebar Navigation */}
-      <motion.aside 
-        className="sidebar"
-        initial={{ x: -260 }}
-        animate={{ x: 0 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      >
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <FiCheckSquare />
           <span>TaskFlow</span>
         </div>
-        
-        <div className="sidebar-nav">
-          <div 
+        {/* ... keeping sidebar nav content same ... */}
+        <nav className="sidebar-nav">
+          <div
             className={`nav-item ${viewFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setViewFilter('all')}
+            onClick={() => { setViewFilter('all'); setIsSidebarOpen(false); }}
           >
             <span className="nav-item-icon"><FiInbox /></span>
-            <span className="nav-item-text">All Tasks</span>
+            <span className="nav-item-text">All</span>
           </div>
-          <div 
+          <div
             className={`nav-item ${viewFilter === 'today' ? 'active' : ''}`}
-            onClick={() => setViewFilter('today')}
-          >
-            <span className="nav-item-icon"><FiStar /></span>
-            <span className="nav-item-text">Today</span>
-          </div>
-          <div 
-            className={`nav-item ${viewFilter === 'upcoming' ? 'active' : ''}`}
-            onClick={() => setViewFilter('upcoming')}
+            onClick={() => { setViewFilter('today'); setIsSidebarOpen(false); }}
           >
             <span className="nav-item-icon"><FiCalendar /></span>
+            <span className="nav-item-text">Today</span>
+          </div>
+          <div
+            className={`nav-item ${viewFilter === 'upcoming' ? 'active' : ''}`}
+            onClick={() => { setViewFilter('upcoming'); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-item-icon"><FiStar /></span>
             <span className="nav-item-text">Upcoming</span>
           </div>
-        </div>
+          <div
+            className={`nav-item ${viewFilter === 'completed' ? 'active' : ''}`}
+            onClick={() => { setViewFilter('completed'); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-item-icon"><FiCheckCircle /></span>
+            <span className="nav-item-text">Completed</span>
+          </div>
+        </nav>
 
-        <div className="sidebar-divider" />
-        
-        <div className="sidebar-section-title">Folders</div>
-        <div className="sidebar-nav">
-          {folders.map(folder => (
+        <div className="sidebar-divider"></div>
+
+        <div className="sidebar-section-title">Lists</div>
+        <nav className="sidebar-nav">
+          {folders.map((folder) => (
             <div key={folder._id} className="nav-item">
-              <span className="nav-item-icon" style={{ color: folder.color || 'var(--primary-blue)' }}>
-                <FiStar />
-              </span>
+              <span className="nav-item-icon"><FiFolder /></span>
               <span className="nav-item-text">{folder.name}</span>
             </div>
           ))}
-          <div className="nav-item" style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+          <div className="nav-item" style={{ fontSize: '0.85rem', opacity: 0.7 }} onClick={() => setIsAddFolderModalOpen(true)}>
             <span className="nav-item-icon"><FiPlus /></span>
             <span className="nav-item-text">Add Folder</span>
           </div>
-        </div>
+        </nav>
 
-        <div className="sidebar-divider" />
-        
+        <div className="sidebar-divider"></div>
+
         <div className="sidebar-section-title">Teams</div>
-        <div className="sidebar-nav">
-          {teams.map(team => (
+        <nav className="sidebar-nav">
+          {teams.map((team) => (
             <div key={team._id} className="nav-item">
-              <span className="nav-item-icon"><FiInbox /></span>
+              <span className="nav-item-icon"><FiUsers /></span>
               <span className="nav-item-text">{team.name}</span>
             </div>
           ))}
-          <div className="nav-item" style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+          <div className="nav-item" style={{ fontSize: '0.85rem', opacity: 0.7 }} onClick={() => setIsAddTeamModalOpen(true)}>
             <span className="nav-item-icon"><FiPlus /></span>
             <span className="nav-item-text">Create Team</span>
           </div>
-        </div>
+        </nav>
 
-        <div style={{ marginTop: 'auto' }} className="sidebar-nav">
-           <div className="nav-item" onClick={handleLogout}>
-            <span className="nav-item-icon"><FiLogOut /></span>
-            <span className="nav-item-text">Sign Out</span>
+        <div style={{ flex: 1 }}></div>
+        
+        <nav className="sidebar-nav">
+          <div className="nav-item" onClick={() => navigate('/settings')}>
+            <span className="nav-item-icon"><FiSettings /></span>
+            <span className="nav-item-text">Settings</span>
           </div>
-        </div>
-      </motion.aside>
+          <div className="nav-item" onClick={() => navigate('/bin')}>
+             <span className="nav-item-icon"><FiTrash2 /></span>
+             <span className="nav-item-text">Bin</span>
+          </div>
+        </nav>
+      </aside>
 
-      {/* Main Content Area */}
-      <motion.main 
-        className="main-workspace"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      {/* Main Content */}
+      <main className="main-workspace">
         <header className="workspace-header">
-          <div className="view-title">
+          <button 
+            className="mobile-menu-btn"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <FiList size={24} />
+          </button>
+
+          <h1 className="view-title">
             {viewFilter === 'all' && 'All Tasks'}
             {viewFilter === 'today' && 'Today'}
             {viewFilter === 'upcoming' && 'Upcoming'}
-          </div>
-          
+            {viewFilter === 'completed' && 'Completed'}
+          </h1>
+          {/* ... existing header tools ... */}
+
           <div className="header-tools">
-            <div className="sort-container" style={{ color: 'var(--text-dark)' }}>
-              <div className="view-switcher" style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px', marginRight: '1rem' }}>
-                <button 
-                  onClick={() => setWorkspaceView('list')}
-                  style={{ 
-                    padding: '4px 12px', 
-                    borderRadius: '6px', 
-                    border: 'none', 
-                    background: workspaceView === 'list' ? 'white' : 'transparent',
-                    boxShadow: workspaceView === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: 600
-                  }}
-                >List</button>
-                <button 
-                  onClick={() => setWorkspaceView('kanban')}
-                  style={{ 
-                    padding: '4px 12px', 
-                    borderRadius: '6px', 
-                    border: 'none', 
-                    background: workspaceView === 'kanban' ? 'white' : 'transparent',
-                    boxShadow: workspaceView === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: 600
-                  }}
-                >Kanban</button>
-              </div>
-              <FiFilter style={{ color: 'var(--text-light)' }} />
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as SortBy)}
-                className="sort-select"
-                style={{ background: 'transparent', color: 'var(--text-dark)', border: 'none', fontWeight: 'bold' }}
+            <div className="view-switcher">
+              <button
+                className={workspaceView === 'list' ? 'active' : ''}
+                onClick={() => setWorkspaceView('list')}
               >
-                <option value="createdAt">Date Created</option>
-                <option value="dueDate">Due Date</option>
-                <option value="priority">Priority</option>
-              </select>
+                <FiList /> List
+              </button>
+              <button
+                className={workspaceView === 'kanban' ? 'active' : ''}
+                onClick={() => setWorkspaceView('kanban')}
+              >
+                <FiGrid /> Board
+              </button>
             </div>
-            
-            <button onClick={() => setIsAddModalOpen(true)} className="btn-signup" style={{ padding: '0.5rem 1rem' }}>
-              <FiPlus /> New Task
+
+            <button className="btn-signup" onClick={() => setIsAddModalOpen(true)}>
+              <FiPlus /> Add Task
             </button>
-            
-            <ProfileMenu onLogout={handleLogout} />
+
+            <ProfileMenu onLogout={logout} />
           </div>
         </header>
 
         <div className="board-wrapper">
-          {loading ? (
-            <div className="loading-spinner"><div className="spinner"></div></div>
+          {workspaceView === 'list' ? (
+            <div className="list-view">
+              {viewFilter === 'all' && (
+                <>
+                  {renderTaskSection('Overdue', organizedTasks.overdue)}
+                  {renderTaskSection('Today', organizedTasks.today)}
+                  {renderTaskSection('Upcoming', organizedTasks.upcoming)}
+                  {renderTaskSection('No Date', organizedTasks.noDate)}
+                  {renderTaskSection('Completed', organizedTasks.completed)}
+                </>
+              )}
+              {viewFilter === 'today' && renderTaskSection('Today', organizedTasks.today)}
+              {viewFilter === 'upcoming' && renderTaskSection('Upcoming', organizedTasks.upcoming)}
+              {viewFilter === 'completed' && renderTaskSection('Completed', organizedTasks.completed)}
+              
+              {tasks.length === 0 && (
+                <div className="empty-state">
+                  <FiCheckSquare />
+                  <p>No tasks yet. Create your first task!</p>
+                </div>
+              )}
+            </div>
           ) : (
-            workspaceView === 'kanban' ? (
-              <KanbanBoard 
-                columns={columns} 
-                onDragEnd={handleDragEnd} 
-                onEdit={handleEdit} 
-                onDelete={handleDeleteRequest}
-              />
-            ) : (
-              <ListView 
-                tasks={sortedTasks}
-                onEdit={handleEdit}
-                onDelete={handleDeleteRequest}
-                onToggleStatus={handleToggleStatus}
-              />
-            )
+            <KanbanBoard
+              columns={columns}
+              onDragEnd={handleDragEnd}
+              onEdit={setEditingTask}
+              onDelete={(taskId) => setTaskToDelete(taskId)}
+            />
           )}
         </div>
-      </motion.main>
+      </main>
 
       {/* Modals */}
-      <AddTaskModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        onAddTask={handleAddTask} 
+      <AddTaskModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddTask={handleAddTask}
         folders={folders}
         teams={teams}
       />
-      <EditTaskModal 
-        isOpen={!!editingTask} 
-        onClose={() => setEditingTask(null)} 
-        taskToEdit={editingTask} 
-        onUpdateTask={handleUpdateTask} 
-        folders={folders}
-        teams={teams}
+
+      {editingTask && (
+        <EditTaskModal
+          isOpen={true}
+          taskToEdit={editingTask}
+          onClose={() => setEditingTask(null)}
+          onUpdateTask={handleUpdateTask}
+          folders={folders}
+          teams={teams}
+        />
+      )}
+
+      {taskToDelete && (
+        <ConfirmationModal
+          isOpen={true}
+          title="Delete Task"
+          message="Are you sure you want to delete this task?"
+          onConfirm={confirmDelete}
+          onClose={() => setTaskToDelete(null)}
+        />
+      )}
+
+      <AddFolderModal
+        isOpen={isAddFolderModalOpen}
+        onClose={() => setIsAddFolderModalOpen(false)}
+        onAddFolder={handleAddFolder}
       />
-      <ConfirmationModal isOpen={!!taskToDelete} onClose={() => setTaskToDelete(null)} onConfirm={confirmDelete} title="Delete Task" message="Are you sure you want to permanently delete this task? This action cannot be undone." />
+
+      <AddTeamModal
+        isOpen={isAddTeamModalOpen}
+        onClose={() => setIsAddTeamModalOpen(false)}
+        onCreateTeam={handleCreateTeam}
+      />
     </div>
   );
 };

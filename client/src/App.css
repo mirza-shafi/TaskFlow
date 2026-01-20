@@ -282,6 +282,7 @@ body {
 /* =================================== */
 /* === ENHANCED MODAL STYLES === */
 /* =================================== */
+/* DISABLED - Using new Modal.css instead
 
 .modal-backdrop { 
   position: fixed; 
@@ -437,6 +438,7 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
 }
+END OF DISABLED STYLES */
 
 /* =================================== */
 /* === PROFESSIONAL BUTTON STYLES === */

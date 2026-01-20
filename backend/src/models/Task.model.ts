@@ -5,11 +5,12 @@ export interface ITask {
   user: Types.ObjectId | string;
   title: string;
   description: string;
-  status: 'todo' | 'doing' | 'done';
+  status: 'todo' | 'doing' | 'review' | 'done';
   priority: 'low' | 'medium' | 'high';
   dueDate: Date | null;
   folderId?: string;
   teamId?: string;
+  deletedAt: Date | null;
 }
 
 // Task Document interface (includes Mongoose document methods)
@@ -36,7 +37,7 @@ const taskSchema = new Schema<ITaskDocument>(
     },
     status: {
       type: String,
-      enum: ['todo', 'doing', 'done'],
+      enum: ['todo', 'doing', 'review', 'done'],
       default: 'todo'
     },
     priority: {
@@ -56,6 +57,10 @@ const taskSchema = new Schema<ITaskDocument>(
     teamId: {
       type: Schema.Types.ObjectId,
       ref: 'Team',
+      default: null
+    },
+    deletedAt: {
+      type: Date,
       default: null
     }
   },

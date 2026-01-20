@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppearanceProvider } from './context/AppearanceContext';
 
 // Import your page components
 import HomePage from './pages/HomePage';
@@ -8,6 +9,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import TodoListPage from './pages/TodoListPage';
 import SettingsPage from './pages/SettingsPage';
+import StatisticsPage from './pages/StatisticsPage';
+import BinPage from './pages/BinPage';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -28,7 +31,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 function AppRoutes() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const previousUser = useRef(user);
+  const previousUser = useRef( user);
 
   useEffect(() => {
     // Check if the user state changed from "logged in" to "logged out"
@@ -53,10 +56,34 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/todo" 
+        element={
+          <ProtectedRoute>
+            <TodoListPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/settings" 
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/statistics" 
+        element={
+          <ProtectedRoute>
+            <StatisticsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/bin" 
+        element={
+          <ProtectedRoute>
+            <BinPage />
           </ProtectedRoute>
         } 
       />
@@ -67,9 +94,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <AppearanceProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AppearanceProvider>
     </AuthProvider>
   );
 }

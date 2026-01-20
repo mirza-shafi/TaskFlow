@@ -1,6 +1,6 @@
 // Task types
 
-export type TaskStatus = 'todo' | 'doing' | 'done';
+export type TaskStatus = 'todo' | 'doing' | 'review' | 'done';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 
@@ -14,6 +14,7 @@ export interface Task {
   dueDate: string | null;
   folderId?: string;
   teamId?: string;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

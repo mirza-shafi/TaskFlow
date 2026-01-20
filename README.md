@@ -23,6 +23,14 @@ A responsive, full-stack task management application built with the MERN stack (
 
 ## Features
 
+### Key Highlights
+- **✅ Smart Task Management**: Create, edit, and organize tasks with priorities and deadlines.
+- **📊 Interactive Kanban Board**: Drag-and-drop workflow to manage your "To Do", "Doing", and "Done" tasks effortlessly.
+- **📈 Visual Statistics**: Gain insights into your productivity with interactive charts (Weekly trends, Priority breakdown) and detailed completion metrics.
+- **⚙️ Modern Settings**: A fully responsive, mobile-friendly settings center to manage your Profile, Appearance (Dark/Light mode), and Notifications.
+- **🎨 Premium Experience**: Beautiful Shadcn-inspired UI with smooth animations, ghost inputs, and a clean aesthetic.
+- **📱 Mobile Optimized**: Seamless "Master-Detail" navigation on mobile devices and responsive layouts throughout.
+
 ### Core Functionality
 - **User Authentication:** Secure user registration and login system using JWT (JSON Web Tokens) for session management.
 - **CRUD for Tasks:** Full Create, Read, Update, and Delete functionality for tasks.

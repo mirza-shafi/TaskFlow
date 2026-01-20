@@ -1,18 +1,19 @@
 import axios from 'axios';
+import { UserProfile, UpdateProfilePayload } from '../types/user.types';
 
 const API_URL = '/api/user/profile';
 
-export const getProfile = async () => {
+export const getProfile = async (): Promise<UserProfile> => {
   const token = localStorage.getItem('userToken');
-  const response = await axios.get(API_URL, {
+  const response = await axios.get<UserProfile>(API_URL, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;
 };
 
-export const updateProfile = async (profileData: { name?: string; bio?: string; avatarUrl?: string }) => {
+export const updateProfile = async (profileData: UpdateProfilePayload): Promise<UserProfile> => {
   const token = localStorage.getItem('userToken');
-  const response = await axios.put(API_URL, profileData, {
+  const response = await axios.put<UserProfile>(API_URL, profileData, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;

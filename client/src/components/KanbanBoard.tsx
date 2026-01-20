@@ -21,33 +21,37 @@ interface KanbanBoardProps {
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ columns, onDragEnd, onEdit, onDelete }) => {
   return (
-    <div className="ticktick-kanban">
+    <div className="kanban-board">
       <DragDropContext onDragEnd={onDragEnd}>
         {Object.entries(columns).map(([columnId, column]) => {
           return (
-            <div className="ticktick-column" key={columnId}>
+            <div className={`kanban-column column-${columnId}`} key={columnId}>
               <div className="column-header">
-                <h2 className="column-name">
+                <h2 className="column-title">
                   {column.name}
                   <span className="task-count">{column.items.length}</span>
                 </h2>
               </div>
               
               <Droppable droppableId={columnId}>
-                {(provided) => (
+                {(provided, snapshot) => (
                   <div
-                    className="droppable-area"
-                    style={{ padding: '0.5rem 0' }}
+                    className={`droppable-area ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
                     {column.items.map((item, index) => (
                       <Draggable key={item._id} draggableId={item._id} index={index}>
-                        {(provided) => (
+                        {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
+                            className={`draggable-item ${snapshot.isDragging ? 'dragging' : ''}`}
+                            style={{
+                              ...provided.draggableProps.style,
+                              marginBottom: '8px'
+                            }}
                           >
                             <TaskCard 
                               task={item} 

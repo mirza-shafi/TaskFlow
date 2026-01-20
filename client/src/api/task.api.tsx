@@ -55,3 +55,37 @@ export async function deleteTask(id: string): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to delete task');
 }
+
+export async function getTrashedTasks(): Promise<Task[]> {
+  const token = localStorage.getItem('userToken');
+  const res = await fetch(`${TASK_BASE}/trash/all`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to fetch trashed tasks');
+  return res.json();
+}
+
+export async function restoreTask(id: string): Promise<Task> {
+  const token = localStorage.getItem('userToken');
+  const res = await fetch(`${TASK_BASE}/${id}/restore`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to restore task');
+  return res.json();
+}
+
+export async function permanentlyDeleteTask(id: string): Promise<void> {
+  const token = localStorage.getItem('userToken');
+  const res = await fetch(`${TASK_BASE}/${id}/permanent`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to permanently delete task');
+}

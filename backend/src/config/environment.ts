@@ -11,7 +11,7 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   allowedOrigins: [
     'http://localhost:3000',
-    'https://shafis-task-flow.vercel.app/'
+    'https://shafis-task-flow.vercel.app'
   ]
 };
 
