@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiMail, FiLock, FiUser, FiArrowLeft, FiCheckSquare } from 'react-icons/fi';
+import { FiMail, FiLock, FiArrowLeft, FiCheckSquare } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 
 const LoginPage: React.FC = () => {
