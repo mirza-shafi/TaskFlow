@@ -23,11 +23,20 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask,
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
+    // Convert local date string to ISO string to preserve timezone
+    let formattedDate = null;
+    if (dueDate) {
+        const d = new Date(dueDate);
+        if (!isNaN(d.getTime())) {
+            formattedDate = d.toISOString();
+        }
+    }
+
     onAddTask({ 
       title, 
       description, 
       priority, 
-      dueDate: dueDate || null,
+      dueDate: formattedDate,
       folderId: folderId || undefined,
       teamId: teamId || undefined
     });

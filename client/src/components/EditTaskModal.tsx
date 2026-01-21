@@ -35,11 +35,22 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ taskToEdit: task, isOpen,
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
+    // Convert local date string to ISO string to preserve timezone
+    let formattedDate = null;
+    if (dueDate) {
+        // Since input type="date" gives YYYY-MM-DD, we construct a local time date object
+        // Appending 'T00:00' ensures it's treated as local midnight, not UTC midnight
+        const d = new Date(dueDate.includes('T') ? dueDate : `${dueDate}T00:00:00`);
+        if (!isNaN(d.getTime())) {
+            formattedDate = d.toISOString();
+        }
+    }
+
     onUpdateTask(task._id, { 
       title, 
       description, 
       priority, 
-      dueDate: dueDate || null,
+      dueDate: formattedDate,
       folderId: folderId || undefined,
       teamId: teamId || undefined
     });

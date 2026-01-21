@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import * as taskApi from '../api/task.api';
 import * as folderApi from '../api/folder.api';
 import * as teamApi from '../api/team.api';
@@ -93,16 +93,16 @@ const TodoListPage: React.FC = () => {
   }, [user, logout, navigate]);
 
   // Helper function to check if task is overdue
-  const isOverdue = (task: Task): boolean => {
+  const isOverdue = useCallback((task: Task): boolean => {
     if (!task.dueDate || task.status === 'done') return false;
     return isOverdueInTimezone(task.dueDate, appDate, timezone);
-  };
+  }, [appDate, timezone]);
 
   // Helper function to check if task is today
-  const isToday = (task: Task): boolean => {
+  const isToday = useCallback((task: Task): boolean => {
     if (!task.dueDate) return false;
     return isSameDayInTimezone(task.dueDate, appDate, timezone);
-  };
+  }, [appDate, timezone]);
 
   // Organize tasks into sections
   const organizedTasks = useMemo(() => {
@@ -116,7 +116,7 @@ const TodoListPage: React.FC = () => {
     const completed = tasks.filter(t => t.status === 'done');
 
     return { overdue, today, upcoming, noDate, completed };
-  }, [tasks]);
+  }, [tasks, isOverdue, isToday, appDate, timezone]);
 
   // Task CRUD operations
   const handleAddTask = async (taskData: CreateTaskPayload): Promise<void> => {

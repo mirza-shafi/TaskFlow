@@ -54,7 +54,7 @@ const SettingsPage: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [showMobileSidebar]);
 
   useEffect(() => {
     const fetchProfile = async () => {
