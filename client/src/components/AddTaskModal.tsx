@@ -109,15 +109,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask,
               </select>
             </div>
 
-            {/* Due Date */}
+            {/* Due Date & Time */}
             <div className="form-group">
               <label className="form-label" htmlFor="task-due-date">
                 <FiCalendar size={14} />
-                Due Date
+                Due Date & Time
               </label>
               <input 
                 id="task-due-date"
-                type="date"
+                type="datetime-local"
                 className="form-input"
                 value={dueDate}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}

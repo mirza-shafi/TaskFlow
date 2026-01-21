@@ -3,7 +3,14 @@ import * as taskApi from '../api/task.api';
 import * as folderApi from '../api/folder.api';
 import * as teamApi from '../api/team.api';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { useNavigate } from 'react-router-dom';
+import { 
+  isSameDayInTimezone, 
+  isOverdueInTimezone, 
+  isUpcomingInTimezone,
+  formatDisplayDateTime
+} from '../utils/dateUtils';
 import KanbanBoard from '../components/KanbanBoard';
 import AddTaskModal from '../components/AddTaskModal';
 import EditTaskModal from '../components/EditTaskModal';
@@ -43,6 +50,7 @@ const TodoListPage: React.FC = () => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const { logout, user } = useAuth();
+  const { appDate, timezone, timeFormat } = useSettings();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -87,27 +95,23 @@ const TodoListPage: React.FC = () => {
   // Helper function to check if task is overdue
   const isOverdue = (task: Task): boolean => {
     if (!task.dueDate || task.status === 'done') return false;
-    return new Date(task.dueDate) < new Date();
+    return isOverdueInTimezone(task.dueDate, appDate, timezone);
   };
 
   // Helper function to check if task is today
   const isToday = (task: Task): boolean => {
     if (!task.dueDate) return false;
-    const today = new Date();
-    const taskDate = new Date(task.dueDate);
-    return taskDate.toDateString() === today.toDateString();
+    return isSameDayInTimezone(task.dueDate, appDate, timezone);
   };
 
   // Organize tasks into sections
   const organizedTasks = useMemo(() => {
     const overdue = tasks.filter(t => isOverdue(t) && t.status !== 'done');
     const today = tasks.filter(t => isToday(t) && t.status !== 'done' && !isOverdue(t));
-    const upcoming = tasks.filter(t => 
-      t.dueDate && 
-      new Date(t.dueDate) > new Date() && 
-      !isToday(t) && 
-      t.status !== 'done'
-    );
+    const upcoming = tasks.filter(t => {
+      if (!t.dueDate || t.status === 'done') return false;
+      return isUpcomingInTimezone(t.dueDate, appDate, timezone);
+    });
     const noDate = tasks.filter(t => !t.dueDate && t.status !== 'done');
     const completed = tasks.filter(t => t.status === 'done');
 
@@ -257,10 +261,7 @@ const TodoListPage: React.FC = () => {
                     {task.dueDate && (
                       <span>
                         <FiCalendar size={12} />
-                        {new Date(task.dueDate).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
+                        {formatDisplayDateTime(task.dueDate, timezone, timeFormat)}
                       </span>
                     )}
                     {task.priority && task.priority !== 'low' && (
@@ -270,6 +271,29 @@ const TodoListPage: React.FC = () => {
                     )}
                   </div>
                 )}
+              </div>
+              
+              <div className="task-actions-right" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
+                 {/* Member Icon */}
+                 <div className="task-member-circle" style={{ 
+                    width: '24px', height: '24px', borderRadius: '50%', 
+                    background: '#e2e8f0', color: '#64748b', fontSize: '10px', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: '600'
+                 }}>
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                 </div>
+
+                 <button 
+                    className="btn-delete-task"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setTaskToDelete(task._id);
+                    }}
+                    style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444', display: 'flex' }}
+                 >
+                    <FiTrash2 size={15} />
+                 </button>
               </div>
             </motion.div>
           ))}
@@ -399,6 +423,7 @@ const TodoListPage: React.FC = () => {
           {/* ... existing header tools ... */}
 
           <div className="header-tools">
+            {/* Debug/Active Date Display can go here if needed, but it's in Settings */}
             <div className="view-switcher">
               <button
                 className={workspaceView === 'list' ? 'active' : ''}

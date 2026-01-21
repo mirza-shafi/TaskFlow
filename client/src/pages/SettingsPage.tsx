@@ -2,19 +2,31 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAppearance } from '../context/AppearanceContext';
+import { useSettings } from '../context/SettingsContext';
 import * as userApi from '../api/user.api';
 import { uploadAvatar } from '../api/uploadAvatar.api';
 import {
   FiX, FiUser, FiGrid, FiBell,
-  FiMonitor, FiInfo, FiUpload, FiArrowLeft, FiChevronRight
+  FiMonitor, FiInfo, FiUpload, FiArrowLeft, FiChevronRight, FiCalendar
 } from 'react-icons/fi';
+import { 
+  formatDisplayDateTime 
+} from '../utils/dateUtils';
 import './SettingsPage.css';
 
-type SettingsSection = 'account' | 'appearance' | 'notifications' | 'about';
+type SettingsSection = 'account' | 'appearance' | 'notifications' | 'about' | 'datetime';
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { fontSize, setFontSize, theme, setTheme } = useAppearance();
+  const { 
+    appDate, setAppDate, 
+    isCustomDate, resetAppDate, 
+    timezone, setTimezone, enableTimezone, setEnableTimezone,
+    timeFormat, setTimeFormat,
+    startWeekOn, setStartWeekOn,
+    showWeekNumbers, setShowWeekNumbers
+  } = useSettings();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeSection, setActiveSection] = useState<SettingsSection>('account');
@@ -170,8 +182,18 @@ const SettingsPage: React.FC = () => {
 
       <div className="sidebar-divider" />
       
+      <button
+        className={`sidebar-item ${activeSection === 'datetime' ? 'active' : ''}`}
+        onClick={() => handleSectionClick('datetime')}
+      >
+        <div className="sidebar-item-content">
+            <FiCalendar /> Date & Time
+        </div>
+        {isMobile && <FiChevronRight className="chevron" />}
+      </button>
+
       {/* Disabled/Future Features */}
-      {['Premium', 'Features', 'Smart List', 'Date & Time', 'Integrations'].map((item) => (
+      {['Premium', 'Features', 'Smart List', 'Integrations'].map((item) => (
          <button key={item} className="sidebar-item" disabled>
              <div className="sidebar-item-content">
                 <FiGrid /> {item}
@@ -380,6 +402,148 @@ const SettingsPage: React.FC = () => {
                   </label>
                 </div>
               </div>
+            )}
+
+            {activeSection === 'datetime' && (
+              <div className="settings-section">
+                <h3 className="section-title">Date & Time</h3>
+                <div className="setting-description">
+                   Manage how dates are displayed and calculated across the workspace.
+                </div>
+
+                {/* Group 1: General Settings */}
+                <div className="settings-group">
+                  <div className="group-row">
+                    <span className="row-label">Time Format</span>
+                    <select 
+                      className="clean-select"
+                      value={timeFormat}
+                      onChange={(e) => setTimeFormat(e.target.value as '12h' | '24h')}
+                    >
+                      <option value="12h">12 Hour (1:00 PM)</option>
+                      <option value="24h">24 Hour (13:00)</option>
+                    </select>
+                  </div>
+                  <div className="group-row">
+                    <span className="row-label">Start Week on</span>
+                    <select 
+                      className="clean-select"
+                      value={startWeekOn}
+                      onChange={(e) => setStartWeekOn(e.target.value as 'sunday' | 'monday')}
+                    >
+                      <option value="sunday">Sunday</option>
+                      <option value="monday">Monday</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="spacer-h-24" style={{ height: '24px' }} />
+
+                {/* Group 2: Calendar */}
+                <div className="settings-group">
+                  <div className="group-row">
+                    <span className="row-label">Additional Calendar</span>
+                    <select className="clean-select" disabled>
+                      <option>None</option>
+                      <option>Hijri</option>
+                      <option>Hebrew</option>
+                    </select>
+                  </div>
+                  <div className="group-row">
+                    <span className="row-label">Show Week Numbers</span>
+                    <label className="toggle">
+                      <input 
+                        type="checkbox" 
+                        checked={showWeekNumbers}
+                        onChange={(e) => setShowWeekNumbers(e.target.checked)}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="spacer-h-24" style={{ height: '24px' }} />
+
+                {/* Group 3: Timezone */}
+                <div className="settings-group">
+                  <div className="group-row">
+                      <div className="row-label-block">
+                         <span className="row-label">Time Zone</span>
+                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', opacity: 0.8 }}>
+                           Enable timezone support for tasks
+                         </div>
+                      </div>
+                      <label className="toggle">
+                        <input 
+                          type="checkbox" 
+                          checked={enableTimezone}
+                          onChange={(e) => setEnableTimezone(e.target.checked)}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                  </div>
+                  
+                  {enableTimezone && (
+                      <div className="timezone-expanded">
+                         <select 
+                            className="timezone-select"
+                            value={timezone}
+                            onChange={(e) => setTimezone(e.target.value)}
+                          >
+                            {(Intl as any).supportedValuesOf('timeZone').map((tz: string) => (
+                                <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>
+                            ))}
+                          </select>
+                      </div>
+                  )}
+                </div>
+
+                {/* Developer/Advanced Section */}
+                <div className="advanced-section">
+                     <details>
+                        <summary className="advanced-trigger">Advanced: Override App Time</summary>
+                        <div className="advanced-content">
+                            <div className="advanced-input-row">
+                                <span>Current:</span>
+                                <strong>{formatDisplayDateTime(appDate, timezone, timeFormat)}</strong>
+                            </div>
+                            <div className="advanced-input-row">
+                                <input 
+                                    type="datetime-local" 
+                                    style={{ padding: '6px', borderRadius: '4px', border: '1px solid #d1d5db', width: '100%' }}
+                                    value={(() => {
+                                        try {
+                                            const parts = new Intl.DateTimeFormat('en-CA', {
+                                                year: 'numeric', month: '2-digit', day: '2-digit',
+                                                hour: '2-digit', minute: '2-digit',
+                                                hour12: false,
+                                                timeZone: timezone
+                                            }).formatToParts(appDate);
+                                            
+                                            const getPart = (type: string) => parts.find(p => p.type === type)?.value;
+                                            return `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}`;
+                                        } catch (e) {
+                                            return '';
+                                        }
+                                    })()}
+                                    onChange={(e) => {
+                                        if (e.target.value) setAppDate(new Date(e.target.value));
+                                    }}
+                                />
+                            </div>
+                            {isCustomDate && (
+                                <button 
+                                    onClick={resetAppDate}
+                                    style={{ marginTop: '8px', fontSize: '0.75rem', padding: '4px 8px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                    Reset to Live Time
+                                </button>
+                            )}
+                        </div>
+                     </details>
+                </div>
+              </div>
+              
             )}
 
             {activeSection === 'about' && (

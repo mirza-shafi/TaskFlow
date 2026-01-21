@@ -1,6 +1,8 @@
 import React from 'react';
 import { Task, TaskPriority } from '../types/task.types';
 import { FiEdit2, FiTrash2, FiClock } from 'react-icons/fi';
+import { useSettings } from '../context/SettingsContext';
+import { formatDisplayDateTime } from '../utils/dateUtils';
 
 interface TaskCardProps {
   task: Task;
@@ -9,14 +11,8 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
-  // Helper function to format the date
-  const formatDate = (dateString: string | null): string | null => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    const day = date.toLocaleDateString('en-US', { day: 'numeric' });
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    return `${date.toLocaleDateString('en-US', { weekday: 'short' })} ${month} ${day}`;
-  };
+  const { timezone, timeFormat } = useSettings();
+
 
   const getPriorityClass = (priority: TaskPriority) => {
     switch (priority) {
@@ -56,7 +52,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
         <div className="task-meta-left">
           {task.dueDate && (
             <span className="task-date">
-              <FiClock /> {formatDate(task.dueDate)}
+              <FiClock /> {formatDisplayDateTime(task.dueDate, timezone, timeFormat)}
             </span>
           )}
         </div>

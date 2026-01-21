@@ -2,6 +2,7 @@ import React, { useEffect, useRef, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppearanceProvider } from './context/AppearanceContext';
+import { SettingsProvider } from './context/SettingsContext';
 
 // Import your page components
 import HomePage from './pages/HomePage';
@@ -94,11 +95,13 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <AppearanceProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
-      </AppearanceProvider>
+      <SettingsProvider>
+        <AppearanceProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </AppearanceProvider>
+      </SettingsProvider>
     </AuthProvider>
   );
 }
