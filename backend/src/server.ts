@@ -1,5 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
 // Import configurations
 import { config, validateEnv } from '@/config/environment';
 import { connectDatabase } from '@/config/database';
@@ -16,6 +18,13 @@ import { errorHandler } from '@/middleware/error.middleware';
 
 // Validate environment variables
 validateEnv();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('✅ Created uploads/avatars directory');
+}
 
 const app: Application = express();
 
