@@ -12,6 +12,7 @@ import TodoListPage from './pages/TodoListPage';
 import SettingsPage from './pages/SettingsPage';
 import StatisticsPage from './pages/StatisticsPage';
 import BinPage from './pages/BinPage';
+import NotePage from './pages/NotePage';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -85,6 +86,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <BinPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/note" 
+        element={
+          <ProtectedRoute>
+            <NotePage />
           </ProtectedRoute>
         } 
       />

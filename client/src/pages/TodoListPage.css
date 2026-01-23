@@ -178,6 +178,33 @@ body {
   padding-left: 0.75rem;
 }
 
+/* Bottom Sidebar Buttons */
+.sidebar-bottom-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-bottom-btn:hover {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+
+.sidebar-bottom-btn .nav-item-icon {
+  font-size: 1.1rem;
+}
+
+
 /* MAIN CONTENT */
 .main-workspace {
   flex: 1;

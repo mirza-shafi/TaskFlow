@@ -23,8 +23,8 @@ import { Folder } from '../types/folder.types';
 import { Team } from '../types/team.types';
 import { motion } from 'framer-motion';
 import { 
-  FiCheckSquare, FiInbox, FiCalendar, FiStar, FiPlus, 
-  FiList, FiGrid, FiFolder, FiUsers, FiSettings, FiCheckCircle, FiTrash2, FiSidebar
+  FiCheckSquare, FiCalendar, FiStar, FiPlus, 
+  FiList, FiGrid, FiFolder, FiUsers, FiSettings, FiCheckCircle, FiTrash2, FiSidebar, FiEdit2
 } from 'react-icons/fi';
 import './TodoListPage.css';
 
@@ -342,8 +342,15 @@ const TodoListPage: React.FC = () => {
             className={`nav-item ${viewFilter === 'all' ? 'active' : ''}`}
             onClick={() => { setViewFilter('all'); setIsSidebarOpen(false); }}
           >
-            <span className="nav-item-icon"><FiInbox /></span>
+            <span className="nav-item-icon"><FiList /></span>
             <span className="nav-item-text">All</span>
+          </div>
+          <div
+            className="nav-item"
+            onClick={() => { navigate('/note'); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-item-icon"><FiEdit2 /></span>
+            <span className="nav-item-text">Note</span>
           </div>
           <div
             className={`nav-item ${viewFilter === 'today' ? 'active' : ''}`}
@@ -358,13 +365,6 @@ const TodoListPage: React.FC = () => {
           >
             <span className="nav-item-icon"><FiStar /></span>
             <span className="nav-item-text">Upcoming</span>
-          </div>
-          <div
-            className={`nav-item ${viewFilter === 'completed' ? 'active' : ''}`}
-            onClick={() => { setViewFilter('completed'); setIsSidebarOpen(false); }}
-          >
-            <span className="nav-item-icon"><FiCheckCircle /></span>
-            <span className="nav-item-text">Completed</span>
           </div>
         </nav>
 
@@ -402,16 +402,20 @@ const TodoListPage: React.FC = () => {
 
         <div style={{ flex: 1 }}></div>
         
-        <nav className="sidebar-nav">
-          <div className="nav-item" onClick={() => navigate('/settings')}>
+        <div>
+          <div className="sidebar-bottom-btn" onClick={() => { setViewFilter('completed'); setIsSidebarOpen(false); }}>
+            <span className="nav-item-icon"><FiCheckCircle /></span>
+            <span className="nav-item-text">Completed</span>
+          </div>
+          <div className="sidebar-bottom-btn" onClick={() => navigate('/settings')}>
             <span className="nav-item-icon"><FiSettings /></span>
             <span className="nav-item-text">Settings</span>
           </div>
-          <div className="nav-item" onClick={() => navigate('/bin')}>
+          <div className="sidebar-bottom-btn" onClick={() => navigate('/bin')}>
              <span className="nav-item-icon"><FiTrash2 /></span>
              <span className="nav-item-text">Bin</span>
           </div>
-        </nav>
+        </div>
       </aside>
 
       {/* Main Content */}
