@@ -5,6 +5,8 @@ import * as userApi from '../api/user.api';
 import { FiSettings, FiBarChart2, FiLogOut, FiChevronDown, FiUser } from 'react-icons/fi';
 import './ProfileMenu.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
 interface ProfileMenuProps {
   onLogout: () => void;
 }
@@ -79,7 +81,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ onLogout }) => {
         <div className="profile-avatar">
           {avatarUrl ? (
             <img 
-              src={`http://localhost:5001${avatarUrl}`} 
+              src={`${API_URL}${avatarUrl}`} 
               alt="Profile"
             />
           ) : (
@@ -95,7 +97,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ onLogout }) => {
             <div className="profile-avatar-lg">
               {avatarUrl ? (
                 <img 
-                  src={`http://localhost:5001${avatarUrl}`} 
+                  src={`${API_URL}${avatarUrl}`} 
                   alt="Profile"
                 />
               ) : (
