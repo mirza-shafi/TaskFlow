@@ -62,6 +62,15 @@ body {
   flex-direction: column;
   padding: 1.5rem 1rem;
   flex-shrink: 0;
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-left: 0.5rem;
 }
 
 .sidebar-logo {
@@ -71,8 +80,53 @@ body {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--primary-color);
-  margin-bottom: 2rem;
-  padding-left: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: var(--bg-app);
+  color: var(--primary-color);
+}
+
+/* Collapsed Sidebar Styles */
+.sidebar.collapsed {
+  width: 70px;
+  padding: 1.5rem 0.5rem;
+}
+
+.sidebar.collapsed .sidebar-logo span {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item-text {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-section-title {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+}
+
+.sidebar.collapsed .nav-item-icon {
+  margin: 0;
 }
 
 .sidebar-nav {

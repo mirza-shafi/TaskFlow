@@ -24,7 +24,7 @@ import { Team } from '../types/team.types';
 import { motion } from 'framer-motion';
 import { 
   FiCheckSquare, FiInbox, FiCalendar, FiStar, FiPlus, 
-  FiList, FiGrid, FiFolder, FiUsers, FiSettings, FiCheckCircle, FiTrash2
+  FiList, FiGrid, FiFolder, FiUsers, FiSettings, FiCheckCircle, FiTrash2, FiSidebar
 } from 'react-icons/fi';
 import './TodoListPage.css';
 
@@ -53,6 +53,7 @@ const TodoListPage: React.FC = () => {
   const { appDate, timezone, timeFormat } = useSettings();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Close sidebar when route changes or width changes (optional optimization)
   useEffect(() => {
@@ -321,10 +322,19 @@ const TodoListPage: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-logo">
-          <FiCheckSquare />
-          <span>TaskFlow</span>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <FiCheckSquare />
+            {!isSidebarCollapsed && <span>TaskFlow</span>}
+          </div>
+          <button 
+            className="sidebar-toggle-btn"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <FiSidebar />
+          </button>
         </div>
         {/* ... keeping sidebar nav content same ... */}
         <nav className="sidebar-nav">

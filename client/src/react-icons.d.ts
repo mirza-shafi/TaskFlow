@@ -37,6 +37,7 @@ declare module 'react-icons/fi' {
   export const FiEdit2: FC<IconBaseProps>;
   export const FiMoreVertical: FC<IconBaseProps>;
   export const FiChevronDown: FC<IconBaseProps>;
+  export const FiSidebar: FC<IconBaseProps>;
   export const FiBarChart2: FC<IconBaseProps>;
   export const FiLogOut: FC<IconBaseProps>;
   export const FiRefreshCcw: FC<IconBaseProps>;

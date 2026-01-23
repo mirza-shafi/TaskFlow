@@ -17,7 +17,7 @@ code {
   --font-size-base: 16px;
 
   /* Global Shadcn-like Palette */
-  --bg-app: #ffffff;
+  --bg-app: #f9fafb;
   --bg-sidebar: #f3f4f6;
   --bg-card: #ffffff;
   --bg-card-hover: #f9fafb;
@@ -48,7 +48,7 @@ code {
   --bg-sidebar: #1f2937;
   --bg-card: #1f2937;
   --bg-card-hover: #374151;
-  --bg-column: #1f2937;
+  --bg-column: #111827;
   
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
