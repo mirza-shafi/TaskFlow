@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { Team, CreateTeamPayload } from '../types/team.types';
 
-const API_URL = '/api/teams';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const API_URL = `${API_BASE}/api/teams`;
 
 export const getTeams = async (): Promise<Team[]> => {
   const token = localStorage.getItem('userToken');

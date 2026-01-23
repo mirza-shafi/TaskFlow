@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { Folder, CreateFolderPayload } from '../types/folder.types';
 
-const API_URL = '/api/folders';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const API_URL = `${API_BASE}/api/folders`;
 
 export const getFolders = async (): Promise<Folder[]> => {
   const token = localStorage.getItem('userToken');
