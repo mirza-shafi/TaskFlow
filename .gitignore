@@ -7,3 +7,27 @@ build/
 *.log
 .idea/
 .vscode/
+
+# Markdown files (except README.md)
+*.md
+!README.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# Backend specific
+backend/.env
+backend/venv/
+backend/__pycache__/
+
+# Frontend specific
+client/node_modules/
+client/build/
+client/.env.local

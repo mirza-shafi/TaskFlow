@@ -1,165 +1,449 @@
-# TaskFlow - A Full-Stack Kanban Task Manager
+# TaskFlow - Advanced Task Management System
 
-A responsive, full-stack task management application built with the MERN stack (MongoDB, Express, React, Node.js). TaskFlow features a professional Kanban-style board, complete user authentication, and a modern, intuitive user interface designed to work seamlessly on both desktop and mobile devices.
+A modern, full-stack task management application with enterprise-grade authentication and real-time collaboration features.
 
-**Live Demo:** [**https://shafis-task-flow.vercel.app/**](https://shafis-task-flow.vercel.app/)
-
----
-
-## Screenshots
-
-<table>
-  <tr>
-    <td align="center"><strong>Desktop View</strong></td>
-    <td align="center"><strong>Mobile View</strong></td>
-  </tr>
-  <tr>
-    <td><img src="./client//src/imgaes/desktopView.png" alt="TaskFlow Desktop View"></td>
-    <td><img src="./client/src/imgaes/mobileView.png" alt="TaskFlow Mobile View"></td>
-  </tr>
-</table>
+![TaskFlow](https://img.shields.io/badge/Status-Production%20Ready-success)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-009688?logo=fastapi)
+![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python)
 
 ---
 
-## Features
-
-### Key Highlights
-- **✅ Smart Task Management**: Create, edit, and organize tasks with priorities and deadlines.
-- **📊 Interactive Kanban Board**: Drag-and-drop workflow to manage your "To Do", "Doing", and "Done" tasks effortlessly.
-- **📈 Visual Statistics**: Gain insights into your productivity with interactive charts (Weekly trends, Priority breakdown) and detailed completion metrics.
-- **⚙️ Modern Settings**: A fully responsive, mobile-friendly settings center to manage your Profile, Appearance (Dark/Light mode), and Notifications.
-- **🎨 Premium Experience**: Beautiful Shadcn-inspired UI with smooth animations, ghost inputs, and a clean aesthetic.
-- **📱 Mobile Optimized**: Seamless "Master-Detail" navigation on mobile devices and responsive layouts throughout.
+## 🚀 Features
 
 ### Core Functionality
-- **User Authentication:** Secure user registration and login system using JWT (JSON Web Tokens) for session management.
-- **CRUD for Tasks:** Full Create, Read, Update, and Delete functionality for tasks.
-- **Kanban Board:** A three-column board ("To Do", "In Progress", "Done") to visually manage task workflow.
-- **Drag & Drop:** Smoothly move tasks between columns to update their status.
-- **Detailed Tasks:** Each task can include a title, description, priority level (High, Medium, Low), and a due date.
-- **Sorting:** Easily sort tasks within columns by Creation Date, Due Date, or Priority.
+- ✅ **Task Management** - Create, update, delete, and organize tasks
+- 📁 **Folder Organization** - Group tasks into folders
+- 👥 **Team Collaboration** - Share tasks and folders with team members
+- 🎯 **Priority Levels** - High, Medium, Low priority tasks
+- 📅 **Due Dates** - Set and track task deadlines
+- 🏷️ **Tags** - Categorize tasks with custom tags
+- 🗑️ **Soft Delete** - Recover deleted tasks from bin
 
-### UI & UX
-- **Fully Responsive:** The design seamlessly transforms from a three-column desktop view to a single-column, tab-bar-driven experience on mobile.
-- **Modern Design:** A clean, professional interface with a consistent look and feel across all pages.
-- **Interactive Modals:** All user actions (add, edit, delete confirmation) are handled through sleek, modern modal windows.
-- **Professional Components:** Includes a user profile menu with an avatar and dropdown.
-- **User Feedback:** Hover effects and other small details provide a responsive and engaging user experience.
+### Advanced Authentication 🔐
+- 📧 **Email Verification** - Verify user emails before account activation
+- 🔑 **Password Reset** - Secure password reset via email
+- 🎫 **Dual Token System** - Access tokens (15 min) + Refresh tokens (30 days)
+- 📱 **Session Management** - Track and manage sessions across devices
+- 💻 **Device Tracking** - Monitor which devices are logged in
+- 🚪 **Industry-Level Logout** - Token blacklisting and session cleanup
+- 🛡️ **Security Features**:
+  - Account lockout after failed attempts
+  - Rate limiting on auth endpoints
+  - Security event logging
+  - IP tracking
+  - New device login alerts
 
-### Backend & Security
-- **Secure API:** The backend API is protected, ensuring users can only access and manage their own tasks.
-- **Password Hashing:** User passwords are never stored in plain text, using `bcryptjs` for secure hashing.
-- **CORS Configuration:** The server is configured to only accept requests from the deployed frontend application for enhanced security.
-
----
-
-## Tech Stack
-
-### Frontend
-- **React:** A JavaScript library for building user interfaces.
-- **React Router:** For client-side routing and navigation.
-- **React Context API:** For global state management (user authentication).
-- **@hello-pangea/dnd:** For drag-and-drop functionality.
-- **React Icons:** For UI icons.
-- **CSS:** Custom styling for a professional and responsive design.
-
-### Backend
-- **Node.js:** A JavaScript runtime environment.
-- **Express:** A fast, unopinionated, minimalist web framework for Node.js.
-- **MongoDB Atlas:** A fully-managed cloud database.
-- **Mongoose:** An elegant MongoDB object modeling tool for Node.js.
-- **JSON Web Tokens (JWT):** For secure user authorization.
-- **bcryptjs:** For hashing passwords.
+### User Experience
+- 🎨 **Modern UI** - Clean, responsive design
+- 🌓 **Dark Mode** - Eye-friendly dark theme
+- ⚡ **Real-time Updates** - Instant synchronization
+- 📊 **Dashboard** - Overview of tasks and progress
+- 🔍 **Search** - Quick task search and filtering
 
 ---
 
-## Code Architecture
+## 🏗️ Tech Stack
 
-The project follows a standard **MERN** mono-repo structure, separating the frontend and backend concerns.
+### Backend (FastAPI)
+- **Framework**: FastAPI 0.115.0
+- **Language**: Python 3.12
+- **Database**: MongoDB Atlas (Motor async driver)
+- **Authentication**: JWT with dual token system
+- **Password Hashing**: Argon2 (industry-standard)
+- **Email Service**: SMTP with HTML templates
+- **Validation**: Pydantic models
+- **API Documentation**: Auto-generated Swagger UI
+
+### Frontend (React)
+- **Framework**: React 18.x
+- **Language**: TypeScript/JavaScript
+- **Styling**: Custom CSS
+- **State Management**: React Context
+- **HTTP Client**: Axios
+- **Routing**: React Router
+
+### Database
+- **Primary**: MongoDB Atlas
+- **Collections**: users, tasks, folders, teams, sessions, token_blacklist, security_logs
+
+---
+
+## 📦 Project Structure
 
 ```
 TaskFlow/
-├── client/                 # Frontend React Application
-│   ├── public/            # Static assets
-│   └── src/
-│       ├── api/           # Axios service layers for API communication
-│       ├── components/    # Reusable UI components (TaskCard, KanbanBoard, etc.)
-│       ├── context/       # React Context providers (Auth, Appearance)
-│       ├── pages/         # Route implementations (TodoListPage, SettingsPage, etc.)
-│       ├── types/         # TypeScript definitions
-│       └── utils/         # Helper functions
+├── backend/                    # FastAPI backend
+│   ├── app/
+│   │   ├── api/v1/            # API endpoints
+│   │   │   ├── auth.py        # Authentication routes
+│   │   │   ├── users.py       # User management
+│   │   │   ├── tasks.py       # Task operations
+│   │   │   ├── folders.py     # Folder management
+│   │   │   └── teams.py       # Team collaboration
+│   │   ├── core/              # Core functionality
+│   │   │   ├── security.py    # JWT, password hashing
+│   │   │   └── dependencies.py # Auth dependencies
+│   │   ├── services/          # Business logic
+│   │   │   ├── auth_service.py
+│   │   │   ├── email_service.py
+│   │   │   ├── session_service.py
+│   │   │   └── security_service.py
+│   │   ├── schemas/           # Pydantic models
+│   │   ├── utils/             # Utilities
+│   │   │   ├── device_parser.py
+│   │   │   └── token_manager.py
+│   │   ├── config.py          # Configuration
+│   │   ├── database.py        # MongoDB connection
+│   │   └── main.py            # FastAPI app
+│   ├── venv/                  # Virtual environment
+│   ├── .env                   # Environment variables
+│   └── requirements.txt       # Python dependencies
 │
-├── backend/               # Backend Node.js/Express Application
-│   ├── config/            # Database and App configuration
-│   ├── controllers/       # Route logic and request handling
-│   ├── middleware/        # Auth verification and error handling
-│   ├── models/            # Mongoose Schemas (Task, User, Folder)
-│   ├── routes/            # API endpoint definitions
-│   └── server.js          # Entry point
+├── client/                    # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── pages/             # Page components
+│   │   ├── context/           # React context
+│   │   ├── services/          # API services
+│   │   └── App.tsx            # Main app
+│   └── package.json
 │
-└── README.md              # Project documentation
+└── README.md                  # This file
 ```
 
 ---
 
-## Getting Started
-
-To get a local copy up and running, follow these simple steps.
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js installed on your machine
-- npm
-- A MongoDB Atlas account and connection string
 
-### Installation & Setup
+- **Python**: 3.12 or higher
+- **Node.js**: 16.x or higher
+- **MongoDB**: Atlas account (free tier works)
+- **Gmail**: For email service (or other SMTP provider)
 
-1.  **Clone the repository:**
-    ```sh
-    git clone https://github.com/mirza-shafi/TaskFlow.git
-    ```
+### Backend Setup
 
-2.  **Install Backend Dependencies:**
-    ```sh
-    cd backend
-    npm install
-    ```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/TaskFlow.git
+   cd TaskFlow/backend
+   ```
 
-3.  **Create Backend Environment File:**
-    - In the `backend` folder, create a file named `.env` and add your secret keys:
-    ```env
-    MONGO_URI=your_mongodb_connection_string
-    JWT_SECRET=your_jwt_secret_string
-    PORT=5001
-    ```
+2. **Create virtual environment**
+   ```bash
+   python3.12 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-4.  **Install Frontend Dependencies:**
-    ```sh
-    cd ../client
-    npm install
-    ```
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Running the Application
+4. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
+   ```
 
-1.  **Start the Backend Server:**
-    - In your `backend` terminal, run:
-    ```sh
-    npm run dev
-    ```
+   Required variables:
+   ```env
+   # MongoDB
+   MONGO_URI=your-mongodb-atlas-uri
+   
+   # JWT
+   JWT_SECRET=your-secret-key-min-32-chars
+   ACCESS_TOKEN_EXPIRE_MINUTES=15
+   REFRESH_TOKEN_EXPIRE_DAYS=30
+   
+   # Email (Gmail SMTP)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASSWORD=your-app-password
+   SMTP_FROM=your-email@gmail.com
+   
+   # Frontend
+   FRONTEND_URL=http://localhost:3000
+   ```
 
-2.  **Start the Frontend Development Server:**
-    - In a **new** terminal, from the `client` folder, run:
-    ```sh
-    npm start
-    ```
-    - Your application should now be running at `http://localhost:3000`.
+5. **Run the server**
+   ```bash
+   ./venv/bin/uvicorn app.main:app --reload --port 8000
+   ```
+
+   Server will start at: http://localhost:8000
+   
+   API Documentation: http://localhost:8000/docs
+
+### Frontend Setup
+
+1. **Navigate to client directory**
+   ```bash
+   cd ../client
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure API endpoint**
+   
+   Update `src/services/api.js`:
+   ```javascript
+   const API_BASE_URL = "http://localhost:8000/api/v1";
+   ```
+
+4. **Start development server**
+   ```bash
+   npm start
+   ```
+
+   Frontend will start at: http://localhost:3000
 
 ---
 
-## Deployment
+## 📧 Email Configuration
 
-This project is configured for a two-part deployment:
+### Gmail SMTP Setup
 
-- **Backend:** Deployed as a "Web Service" on **Render**, with the root directory set to `backend`.
-- **Frontend:** Deployed as a "Project" on **Vercel**, with the root directory set to `client`.
+1. **Enable 2-Factor Authentication**
+   - Go to: https://myaccount.google.com/security
+   - Enable "2-Step Verification"
 
-Remember to set the appropriate environment variables in your hosting provider's dashboard and update the `cors` configuration in `server.js` with your live frontend URL.
+2. **Generate App Password**
+   - Go to: https://myaccount.google.com/apppasswords
+   - Select app: "Mail"
+   - Select device: "Other (Custom name)" → "TaskFlow"
+   - Copy the 16-character password (remove spaces)
+
+3. **Update .env**
+   ```env
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASSWORD=abcdefghijklmnop  # 16-char app password
+   ```
+
+For detailed email setup instructions, see `backend/EMAIL_SETUP_GUIDE.md`
+
+---
+
+## 🔐 Authentication Flow
+
+### Registration
+1. User registers with name, email, password
+2. Account created with `isEmailVerified: false`
+3. Verification email sent with 24-hour token
+4. User clicks link to verify email
+5. Account activated
+
+### Login
+1. User enters email and password
+2. System checks if email is verified
+3. If verified, generates access token (15 min) and refresh token (30 days)
+4. Creates session with device information
+5. Returns both tokens to client
+
+### Token Refresh
+1. Access token expires after 15 minutes
+2. Client uses refresh token to get new access token
+3. Refresh token valid for 30 days
+4. No need to re-login frequently
+
+### Logout
+1. **Single Device**: Revokes current session, blacklists access token
+2. **All Devices**: Revokes all sessions, blacklists current token
+
+---
+
+## 📚 API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/verify-email` - Verify email with token
+- `POST /api/v1/auth/resend-verification` - Resend verification email
+- `POST /api/v1/auth/login` - Login with email/password
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/forgot-password` - Request password reset
+- `POST /api/v1/auth/reset-password` - Reset password with token
+- `POST /api/v1/auth/logout` - Logout current device
+- `POST /api/v1/auth/logout-all` - Logout all devices
+- `GET /api/v1/auth/sessions` - Get active sessions
+- `DELETE /api/v1/auth/sessions/{id}` - Revoke specific session
+
+### Users
+- `GET /api/v1/users/profile` - Get current user profile
+- `PUT /api/v1/users/profile` - Update profile
+- `POST /api/v1/users/change-password` - Change password
+- `DELETE /api/v1/users/account` - Delete account
+
+### Tasks
+- `GET /api/v1/tasks` - Get all tasks
+- `POST /api/v1/tasks` - Create task
+- `GET /api/v1/tasks/{id}` - Get task by ID
+- `PUT /api/v1/tasks/{id}` - Update task
+- `DELETE /api/v1/tasks/{id}` - Delete task (soft delete)
+- `GET /api/v1/tasks/bin` - Get deleted tasks
+- `POST /api/v1/tasks/{id}/restore` - Restore from bin
+
+### Folders
+- `GET /api/v1/folders` - Get all folders
+- `POST /api/v1/folders` - Create folder
+- `PUT /api/v1/folders/{id}` - Update folder
+- `DELETE /api/v1/folders/{id}` - Delete folder
+
+### Teams
+- `GET /api/v1/teams` - Get all teams
+- `POST /api/v1/teams` - Create team
+- `PUT /api/v1/teams/{id}` - Update team
+- `DELETE /api/v1/teams/{id}` - Delete team
+
+**Full API Documentation**: http://localhost:8000/docs
+
+---
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Test SMTP connection
+./venv/bin/python test_smtp.py
+
+# Test authentication flow
+./test_auth.sh
+
+# Manual email verification
+./venv/bin/python verify_email_manual.py user@example.com
+```
+
+### Frontend Tests
+
+```bash
+cd client
+npm test
+```
+
+---
+
+## 🔒 Security Features
+
+### Password Security
+- **Argon2** hashing (more secure than bcrypt)
+- Minimum 6 characters required
+- Passwords never stored in plain text
+
+### Token Security
+- **Access tokens**: Short-lived (15 minutes)
+- **Refresh tokens**: Stored in database, can be revoked
+- **Token blacklisting**: Immediate invalidation on logout
+- **HTTPS recommended** for production
+
+### Account Security
+- **Email verification** required before login
+- **Account lockout** after 5 failed attempts (15 minutes)
+- **Rate limiting** on authentication endpoints
+- **Security logging** for audit trail
+
+### Session Security
+- **Device tracking** with fingerprinting
+- **IP address** logging
+- **New device alerts** via email
+- **Session limits** (max 5 devices per user)
+
+---
+
+## 🌐 Deployment
+
+### Backend (FastAPI)
+
+**Recommended platforms:**
+- **Render** (easiest)
+- **Railway**
+- **Heroku**
+- **AWS EC2**
+- **DigitalOcean**
+
+**Environment variables to set:**
+- All variables from `.env`
+- Set `ENVIRONMENT=production`
+- Use production MongoDB URI
+- Configure production email service (SendGrid/AWS SES recommended)
+
+### Frontend (React)
+
+**Recommended platforms:**
+- **Vercel** (easiest)
+- **Netlify**
+- **AWS S3 + CloudFront**
+
+**Build command:**
+```bash
+npm run build
+```
+
+**Update API URL** in production build to point to deployed backend.
+
+---
+
+## 📖 Documentation
+
+- **API Documentation**: http://localhost:8000/docs (Swagger UI)
+- **Email Setup**: `backend/EMAIL_SETUP_GUIDE.md`
+- **Frontend Integration**: `backend/FRONTEND_INTEGRATION.md`
+- **Test Results**: `backend/ENDPOINT_TEST_RESULTS.md`
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+## 👨‍💻 Author
+
+**Mirza Shafi**
+- GitHub: [@mirzashafi](https://github.com/mirzashafi)
+- Email: mirza.md.shafi.uddin@gmail.com
+
+---
+
+## 🙏 Acknowledgments
+
+- FastAPI for the amazing web framework
+- MongoDB for the flexible database
+- React for the powerful frontend library
+- All open-source contributors
+
+---
+
+## 📊 Project Stats
+
+- **Backend**: ~2,500+ lines of Python code
+- **Frontend**: React with TypeScript
+- **API Endpoints**: 25+ endpoints
+- **Database Collections**: 7 collections
+- **Authentication**: Enterprise-grade security
+- **Email Templates**: 3 beautiful HTML templates
+- **Documentation**: Auto-generated Swagger UI
+
+---
+
+**⭐ If you find this project useful, please give it a star!**
