@@ -13,6 +13,7 @@ import SettingsPage from './pages/SettingsPage';
 import StatisticsPage from './pages/StatisticsPage';
 import BinPage from './pages/BinPage';
 import NotePage from './pages/NotePage';
+import HabitTrackerPage from './pages/HabitTrackerPage';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -94,6 +95,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <NotePage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/habits" 
+        element={
+          <ProtectedRoute>
+            <HabitTrackerPage />
           </ProtectedRoute>
         } 
       />

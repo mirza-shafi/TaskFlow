@@ -229,6 +229,13 @@ const NotePage: React.FC = () => {
             <span className="nav-item-icon"><FiStar /></span>
             <span className="nav-item-text">Next 7 Days</span>
           </div>
+          <div
+            className="nav-item"
+            onClick={() => { navigate('/habits'); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-item-icon"><FiCheckCircle /></span>
+            <span className="nav-item-text">Habits</span>
+          </div>
         </nav>
 
         <div className="sidebar-divider"></div>
