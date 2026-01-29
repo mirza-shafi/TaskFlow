@@ -48,7 +48,8 @@ class UserService:
         user_id: str,
         name: Optional[str] = None,
         bio: Optional[str] = None,
-        avatar_url: Optional[str] = None
+        avatar_url: Optional[str] = None,
+        appearance: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Update user profile.
@@ -58,6 +59,7 @@ class UserService:
             name: New name (optional)
             bio: New bio (optional)
             avatar_url: New avatar URL (optional)
+            appearance: New appearance settings (optional)
         
         Returns:
             Updated user document
@@ -74,6 +76,8 @@ class UserService:
             update_doc["bio"] = bio
         if avatar_url is not None:
             update_doc["avatarUrl"] = avatar_url
+        if appearance is not None:
+            update_doc["appearance"] = appearance
         
         # Update user
         try:

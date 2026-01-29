@@ -76,6 +76,7 @@ class AuthService:
             "password": hashed_password,
             "avatarUrl": gravatar_url,  # Set Gravatar photo immediately
             "bio": "",
+            "appearance": {},
             "isEmailVerified": False,
             "emailVerifiedAt": None,
             "oauthProvider": "local",

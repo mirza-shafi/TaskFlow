@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 
@@ -30,6 +30,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     avatarUrl: Optional[str] = None
+    appearance: Optional[Dict[str, Any]] = None
     bio: Optional[str] = None
     oauthProvider: str = "local"
     createdAt: datetime
@@ -43,6 +44,7 @@ class UserResponse(BaseModel):
                 "name": "John Doe",
                 "email": "john@example.com",
                 "avatarUrl": "/uploads/avatars/avatar.jpg",
+                "appearance": {"theme": "dark", "fontSize": "medium"},
                 "bio": "Software developer",
                 "oauthProvider": "local",
                 "createdAt": "2024-01-01T00:00:00Z",
@@ -56,6 +58,7 @@ class ProfileUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=100)
     bio: Optional[str] = Field(None, max_length=500)
     avatarUrl: Optional[str] = None
+    appearance: Optional[Dict[str, Any]] = None
 
 
 class PasswordChange(BaseModel):

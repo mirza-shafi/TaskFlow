@@ -49,6 +49,7 @@ async def update_profile(
     - **name**: New name (optional)
     - **bio**: New bio (optional)
     - **avatarUrl**: New avatar URL (optional)
+    - **appearance**: New appearance settings (optional)
     """
     user_service = UserService(db)
     
@@ -57,7 +58,8 @@ async def update_profile(
             user_id=str(current_user["_id"]),
             name=profile_data.name,
             bio=profile_data.bio,
-            avatar_url=profile_data.avatarUrl
+            avatar_url=profile_data.avatarUrl,
+            appearance=profile_data.appearance
         )
         user["_id"] = str(user["_id"])
         return user
