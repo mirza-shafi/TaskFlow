@@ -1,32 +1,31 @@
+import axios from 'axios';
 import { LoginCredentials, RegisterCredentials, AuthResponse } from '../types/auth.types';
+import API_URL from './config';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-const USER_BASE = `${API_URL}/api/users`;
+const AUTH_URL = `${API_URL}/auth`;
 
 export async function login(userData: LoginCredentials): Promise<AuthResponse> {
-  const res = await fetch(`${USER_BASE}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-  
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || 'Failed to log in');
-  }
-  return data.data;
+  const response = await axios.post<AuthResponse>(`${AUTH_URL}/login`, userData);
+  return response.data;
 }
 
-export async function register(userData: RegisterCredentials): Promise<AuthResponse> {
-  const res = await fetch(`${USER_BASE}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
+export async function register(userData: RegisterCredentials): Promise<{ message: string }> {
+  const response = await axios.post<{ message: string }>(`${AUTH_URL}/register`, userData);
+  return response.data;
+}
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || 'Failed to register');
-  }
-  return data.data;
+
+export async function verifyEmail(token: string): Promise<{ message: string }> {
+  const response = await axios.post<{ message: string }>(`${AUTH_URL}/verify-email`, { token });
+  return response.data;
+}
+
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const response = await axios.post<{ message: string }>(`${AUTH_URL}/forgot-password`, { email });
+  return response.data;
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+  const response = await axios.post<{ message: string }>(`${AUTH_URL}/reset-password`, { token, newPassword });
+  return response.data;
 }

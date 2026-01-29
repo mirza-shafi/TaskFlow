@@ -5,6 +5,7 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useSettings } from '../context/SettingsContext';
 import * as userApi from '../api/user.api';
 import { uploadAvatar } from '../api/uploadAvatar.api';
+import { BASE_URL } from '../api/config';
 import {
   FiX, FiUser, FiGrid, FiBell,
   FiMonitor, FiInfo, FiUpload, FiArrowLeft, FiChevronRight, FiCalendar
@@ -43,6 +44,10 @@ const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Password Modal State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
 
   // Handle Resize for Mobile
   useEffect(() => {
@@ -99,6 +104,38 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (passwordForm.new !== passwordForm.confirm) {
+          setMessage('New passwords do not match');
+          return;
+      }
+      setLoading(true);
+      try {
+          await userApi.changePassword(passwordForm.current, passwordForm.new);
+          setMessage('Password changed successfully!');
+          setShowPasswordModal(false);
+          setPasswordForm({ current: '', new: '', confirm: '' });
+          setTimeout(() => setMessage(''), 3000);
+      } catch (error: any) {
+          setMessage(error?.response?.data?.message || 'Failed to change password');
+      } finally {
+          setLoading(false);
+      }
+  };
+  
+  const handleDeleteAccount = async () => {
+      if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+          try {
+              await userApi.deleteAccount();
+              alert('Account deleted successfully');
+              window.location.href = '/login';
+          } catch (error: any) {
+              setMessage(error?.response?.data?.message || 'Failed to delete account');
+          }
+      }
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -136,6 +173,12 @@ const SettingsPage: React.FC = () => {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getAvatarSrc = (url: string) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BASE_URL}${url}`;
   };
 
   const SidebarContent = () => (
@@ -241,7 +284,7 @@ const SettingsPage: React.FC = () => {
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {profile.avatarUrl ? (
-                        <img src={`http://localhost:5001${profile.avatarUrl}`} alt="Profile" />
+                        <img src={getAvatarSrc(profile.avatarUrl) || ''} alt="Profile" />
                       ) : (
                         <div className="avatar-placeholder-small">{getInitials(profile.name)}</div>
                       )}
@@ -293,7 +336,37 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <div className="group-row">
                     <span className="row-label">Password</span>
-                    <button className="row-action">Change Password</button>
+                    {!showPasswordModal ? (
+                       <button className="row-action" onClick={() => setShowPasswordModal(true)}>Change Password</button>
+                    ) : (
+                       <div className="password-form-inline">
+                           <input 
+                               type="password" 
+                               placeholder="Current Password"
+                               value={passwordForm.current} 
+                               onChange={e => setPasswordForm({...passwordForm, current: e.target.value})}
+                               className="setting-input-ghost"
+                           />
+                           <input 
+                               type="password" 
+                               placeholder="New Password"
+                               value={passwordForm.new} 
+                               onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
+                               className="setting-input-ghost"
+                           />
+                           <input 
+                               type="password" 
+                               placeholder="Confirm New"
+                               value={passwordForm.confirm} 
+                               onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
+                               className="setting-input-ghost"
+                           />
+                           <div className="row-actions-group">
+                               <button className="row-action" onClick={handleChangePassword}>Update</button>
+                               <button className="row-action danger" onClick={() => setShowPasswordModal(false)}>Cancel</button>
+                           </div>
+                       </div>
+                    )}
                   </div>
                   <div className="group-row">
                     <span className="row-label">2-Step Verification</span>
@@ -326,7 +399,7 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <div className="group-row">
                     <span className="row-label">Account</span>
-                    <button className="row-action danger">Delete</button>
+                    <button className="row-action danger" onClick={handleDeleteAccount}>Delete</button>
                   </div>
                 </div>
 
@@ -437,8 +510,6 @@ const SettingsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="spacer-h-24" style={{ height: '24px' }} />
-
                 {/* Group 2: Calendar */}
                 <div className="settings-group">
                   <div className="group-row">
@@ -461,8 +532,6 @@ const SettingsPage: React.FC = () => {
                     </label>
                   </div>
                 </div>
-
-                <div className="spacer-h-24" style={{ height: '24px' }} />
 
                 {/* Group 3: Timezone */}
                 <div className="settings-group">

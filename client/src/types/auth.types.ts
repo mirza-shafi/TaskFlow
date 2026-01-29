@@ -1,9 +1,13 @@
 // Authentication types
 
 export interface User {
-  token?: string;
+  _id: string;
   name: string;
   email: string;
+  avatarUrl?: string;
+  bio?: string;
+  isEmailVerified?: boolean;
+  token?: string;
 }
 
 export interface LoginCredentials {
@@ -18,9 +22,11 @@ export interface RegisterCredentials {
 }
 
 export interface AuthResponse {
-  token: string;
-  name: string;
-  email: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: User;
 }
 
 export interface AuthContextValue {

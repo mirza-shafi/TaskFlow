@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as authApi from '../api/auth.api';
+import { getProfile } from '../api/user.api';
 import { User, AuthContextValue } from '../types/auth.types';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -8,35 +9,52 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Initialize auth state
   useEffect(() => {
-    const token = localStorage.getItem('userToken');
-    if (token) {
-      try {
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        setUser({ token, name: decoded.name, email: decoded.email });
-      } catch (e) {
-        setUser({ token, name: '', email: '' });
+    const initAuth = async () => {
+      const token = localStorage.getItem('userToken');
+      if (token) {
+        try {
+          const userProfile = await getProfile();
+          setUser({ ...userProfile, token });
+        } catch (e) {
+          console.error('Failed to fetch profile', e);
+          localStorage.removeItem('userToken');
+          localStorage.removeItem('refreshToken');
+          setUser(null);
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
-    const userData = await authApi.login({ email, password });
-    localStorage.setItem('userToken', userData.token);
-    setUser(userData);
+    const response = await authApi.login({ email, password });
+    
+    // Store tokens
+    localStorage.setItem('userToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+    
+    // Set user state
+    setUser({ 
+      ...response.user,
+      token: response.accessToken 
+    });
   };
 
   const logout = (): void => {
     localStorage.removeItem('userToken');
+    localStorage.removeItem('refreshToken');
     setUser(null);
   };
 
-  const register = (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string) => {
     return authApi.register({ name, email, password });
   };
 

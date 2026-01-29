@@ -2,6 +2,7 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiMail, FiLock, FiArrowLeft, FiCheckSquare } from 'react-icons/fi';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 
 const LoginPage: React.FC = () => {
@@ -9,6 +10,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -20,7 +22,8 @@ const LoginPage: React.FC = () => {
       await login(email, password);
       navigate('/app');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -59,16 +62,38 @@ const LoginPage: React.FC = () => {
             </div>
 
             <div className="auth-input-group">
-              <label>Password</label>
+              <div className="flex justify-between items-center w-full mb-1">
+                <label style={{marginBottom: 0}}>Password</label>
+                <Link to="/forgot-password" style={{ fontSize: '0.85rem', color: '#5c6bc0', textDecoration: 'none', fontWeight: 600 }}>
+                  Forgot?
+                </Link>
+              </div>
               <div className="input-with-icon">
                 <FiLock />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '1rem',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0
+                  }}
+                >
+                  {showPassword ? React.createElement(FaEyeSlash as any) : React.createElement(FaEye as any)}
+                </button>
               </div>
             </div>
 

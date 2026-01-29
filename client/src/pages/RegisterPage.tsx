@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiMail, FiLock, FiUser, FiArrowLeft, FiCheckSquare, FiUserPlus } from 'react-icons/fi';
 
@@ -10,7 +10,6 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -18,10 +17,12 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       await register(name, email, password);
-      // Registration successful, AuthContext usually logs the user in automatically
-      navigate('/app');
+      // Registration successful!
+      // We set a special error message that triggers the success UI
+      setError('Registration successful');
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Try a different email.');
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || 'Registration failed. Try a different email.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -41,63 +42,82 @@ const RegisterPage: React.FC = () => {
         </div>
 
         <div className="auth-body">
-          <h1>Create Account</h1>
-          <p className="auth-subtitle">Join thousands of users organizing their work.</p>
-
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="auth-input-group">
-              <label>Full Name</label>
-              <div className="input-with-icon">
-                <FiUser />
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="auth-input-group">
-              <label>Email Address</label>
-              <div className="input-with-icon">
+          {error && error.includes('successful') ? (
+            <div className="auth-success-message">
+              <div className="success-icon">
                 <FiMail />
-                <input
-                  type="email"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  required
-                />
               </div>
+              <h1>Check Your Email</h1>
+              <p className="auth-subtitle">
+                We've sent a verification link to <strong>{email}</strong>.
+                <br />
+                Please verify your email to log in.
+              </p>
+              <Link to="/login" className="auth-submit-btn" style={{ textAlign: 'center', textDecoration: 'none' }}>
+                Proceed to Login
+              </Link>
             </div>
+          ) : (
+            <>
+              <h1>Create Account</h1>
+              <p className="auth-subtitle">Join thousands of users organizing their work.</p>
 
-            <div className="auth-input-group">
-              <label>Password</label>
-              <div className="input-with-icon">
-                <FiLock />
-                <input
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
+              <form onSubmit={handleSubmit} className="auth-form">
+                <div className="auth-input-group">
+                  <label>Full Name</label>
+                  <div className="input-with-icon">
+                    <FiUser />
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      value={name}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
 
-            {error && <div className="auth-error-msg">{error}</div>}
+                <div className="auth-input-group">
+                  <label>Email Address</label>
+                  <div className="input-with-icon">
+                    <FiMail />
+                    <input
+                      type="email"
+                      placeholder="name@company.com"
+                      value={email}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
 
-            <button type="submit" className="auth-submit-btn" disabled={loading}>
-              <FiUserPlus /> {loading ? 'Creating Account...' : 'Get Started Free'}
-            </button>
-          </form>
+                <div className="auth-input-group">
+                  <label>Password</label>
+                  <div className="input-with-icon">
+                    <FiLock />
+                    <input
+                      type="password"
+                      placeholder="At least 6 characters"
+                      value={password}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </div>
 
-          <p className="auth-footer-text">
-            Already have an account? <Link to="/login">Sign in here</Link>
-          </p>
+                {error && <div className="auth-error-msg">{error}</div>}
+
+                <button type="submit" className="auth-submit-btn" disabled={loading}>
+                  <FiUserPlus /> {loading ? 'Creating Account...' : 'Get Started Free'}
+                </button>
+              </form>
+
+              <p className="auth-footer-text">
+                Already have an account? <Link to="/login">Sign in here</Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -271,6 +291,25 @@ const RegisterPage: React.FC = () => {
 
         .auth-footer-text a:hover {
           text-decoration: underline;
+        }
+        
+        .auth-success-message {
+          text-align: center;
+          padding: 1rem 0;
+        }
+        
+        .success-icon {
+          font-size: 3rem;
+          color: #5c6bc0;
+          margin-bottom: 1rem;
+          background: #eff6ff;
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
         }
       `}</style>
     </div>

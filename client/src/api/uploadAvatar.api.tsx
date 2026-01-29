@@ -1,7 +1,7 @@
 import axios from 'axios';
+import API_URL from './config';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-const USER_API = `${API_URL}/api/user`;
+const UPLOAD_URL = `${API_URL}/users/upload-avatar`;
 
 export const uploadAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
   const token = localStorage.getItem('userToken');
@@ -9,7 +9,7 @@ export const uploadAvatar = async (file: File): Promise<{ avatarUrl: string }> =
   formData.append('avatar', file);
 
   const response = await axios.post<{ avatarUrl: string; message: string }>(
-    `${USER_API}/upload-avatar`, 
+    UPLOAD_URL, 
     formData, 
     {
       headers: {
