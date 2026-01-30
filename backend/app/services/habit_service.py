@@ -483,6 +483,96 @@ class HabitService:
         updated_habit = await self.get_habit_by_id(habit_id, owner_id)
         return updated_habit
     
+    async def unshare_habit(
+        self,
+        habit_id: str,
+        owner_id: str,
+        user_id: str
+    ) -> Dict[str, str]:
+        """
+        Remove a user from habit sharing (unshare).
+        
+        Args:
+            habit_id: Habit's ObjectId as string
+            owner_id: Owner's ID (for authorization)
+            user_id: User ID to remove
+        
+        Returns:
+            Success message
+        
+        Raises:
+            NotFoundException: If habit not found
+            ValidationException: If user is not the owner
+        """
+        if not ObjectId.is_valid(habit_id):
+            raise ValidationException("Invalid habit ID format")
+        
+        # Check if habit exists and user is owner
+        habit = await self.habits_collection.find_one({
+            "_id": ObjectId(habit_id),
+            "userId": owner_id
+        })
+        
+        if not habit:
+            raise NotFoundException(f"Habit with ID {habit_id} not found or you're not the owner")
+        
+        # Remove user from sharedWith
+        await self.habits_collection.update_one(
+            {"_id": ObjectId(habit_id)},
+            {
+                "$pull": {"sharedWith": user_id},
+                "$set": {"updatedAt": datetime.utcnow()}
+            }
+        )
+        
+        return {"message": "Habit unshared successfully"}
+    
+    async def get_habit_collaborators(
+        self,
+        habit_id: str,
+        user_id: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Get list of users a habit is shared with.
+        
+        Args:
+            habit_id: Habit's ObjectId as string
+            user_id: User's ID (for authorization)
+        
+        Returns:
+            List of collaborators
+        
+        Raises:
+            NotFoundException: If habit not found
+            ValidationException: If user doesn't have access
+        """
+        if not ObjectId.is_valid(habit_id):
+            raise ValidationException("Invalid habit ID format")
+        
+        habit = await self.habits_collection.find_one({"_id": ObjectId(habit_id)})
+        
+        if not habit:
+            raise NotFoundException(f"Habit with ID {habit_id} not found")
+        
+        # Check if user is owner or has access
+        if habit["userId"] != user_id and user_id not in habit.get("sharedWith", []):
+            raise ValidationException("You don't have access to this habit")
+        
+        # Get collaborator details
+        collaborators = []
+        for shared_user_id in habit.get("sharedWith", []):
+            user = await self.users_collection.find_one({"_id": ObjectId(shared_user_id)})
+            if user:
+                collaborators.append({
+                    "userId": str(user["_id"]),
+                    "email": user["email"],
+                    "name": user.get("name", user["email"]),
+                    "accessType": "viewer",  # Can be enhanced later with role system
+                    "sharedAt": habit.get("updatedAt", habit["createdAt"])
+                })
+        
+        return collaborators
+    
     async def _calculate_current_streak(self, habit_id: str) -> int:
         """Calculate current streak for a habit."""
         today = date.today()

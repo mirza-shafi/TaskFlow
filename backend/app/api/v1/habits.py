@@ -7,7 +7,7 @@ from app.database import get_database
 from app.core.dependencies import get_current_user
 from app.schemas.habit import (
     HabitCreate, HabitUpdate, HabitResponse, HabitList,
-    HabitLog, HabitLogsResponse, MonthlyLogsResponse, HabitShare
+    HabitLog, HabitLogsResponse, MonthlyLogsResponse, HabitShare, HabitCollaboratorsList
 )
 from app.schemas.common import MessageResponse
 from app.services.habit_service import HabitService
@@ -327,3 +327,69 @@ async def share_habit(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.delete("/{habit_id}/share/{user_id}", response_model=MessageResponse)
+async def unshare_habit(
+    habit_id: str,
+    user_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Remove a user from habit sharing (unshare).
+    
+    Only the habit owner can unshare. This revokes the user's access to view the habit.
+    
+    - **habit_id**: Habit ID to unshare
+    - **user_id**: User ID to remove from sharing
+    """
+    habit_service = HabitService(db)
+    
+    try:
+        result = await habit_service.unshare_habit(
+            habit_id=habit_id,
+            owner_id=str(current_user["_id"]),
+            user_id=user_id
+        )
+        return result
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/{habit_id}/collaborators", response_model=HabitCollaboratorsList)
+async def get_habit_collaborators(
+    habit_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Get list of users a habit is shared with.
+    
+    Both the owner and collaborators can view the collaborator list.
+    Shows who has access to this habit for accountability tracking.
+    
+    - **habit_id**: Habit ID to get collaborators for
+    """
+    habit_service = HabitService(db)
+    
+    try:
+        collaborators = await habit_service.get_habit_collaborators(
+            habit_id=habit_id,
+            user_id=str(current_user["_id"])
+        )
+        return {
+            "collaborators": collaborators,
+            "total": len(collaborators)
+        }
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+

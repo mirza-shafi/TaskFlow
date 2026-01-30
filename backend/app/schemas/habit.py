@@ -91,11 +91,32 @@ class HabitList(BaseModel):
     total: int
 
 
+class HabitAccessType(str, Enum):
+    """Habit access type enum."""
+    VIEWER = "viewer"  # Can only view progress
+    COLLABORATOR = "collaborator"  # Can log completions for accountability
+
+
+class HabitCollaborator(BaseModel):
+    """Schema for habit collaborator."""
+    userId: str
+    email: str
+    name: str
+    accessType: str
+    sharedAt: datetime
+
+
 class HabitShare(BaseModel):
     """Schema for sharing a habit."""
     userId: Optional[str] = Field(None, description="User ID to share with")
     email: Optional[EmailStr] = Field(None, description="Email to share with")
-    accessType: str = Field("viewer", description="Access type: viewer or collaborator")
+    accessType: HabitAccessType = Field(HabitAccessType.VIEWER, description="Access type: viewer or collaborator")
+
+
+class HabitCollaboratorsList(BaseModel):
+    """Schema for list of habit collaborators."""
+    collaborators: List[HabitCollaborator]
+    total: int
 
 
 class HabitLogsResponse(BaseModel):
