@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -15,14 +15,21 @@ class FolderUpdate(BaseModel):
     color: Optional[str] = Field(None, max_length=20)
 
 
+class FolderShare(BaseModel):
+    """Schema for sharing a folder with a team."""
+    teamId: str = Field(..., description="Team ID to share the folder with")
+
+
 class FolderResponse(BaseModel):
     """Schema for folder response."""
     id: str = Field(..., alias="_id")
     userId: str
     name: str
     color: Optional[str] = None
+    sharedWithTeams: List[str] = []
     createdAt: datetime
     updatedAt: datetime
     
     class Config:
         populate_by_name = True
+

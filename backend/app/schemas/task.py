@@ -1,7 +1,14 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+
+
+class CollaboratorRole(str, Enum):
+    """Collaborator role enum."""
+    VIEWER = "viewer"
+    EDITOR = "editor"
+    ASSIGNEE = "assignee"
 
 
 class TaskStatus(str, Enum):
@@ -77,4 +84,40 @@ class TaskResponse(BaseModel):
 class TaskList(BaseModel):
     """Schema for task list response."""
     tasks: list[TaskResponse]
+    total: int
+
+
+class TaskCollaborator(BaseModel):
+    """Schema for task collaborator."""
+    userId: str
+    email: Optional[str] = None
+    name: Optional[str] = None
+    role: CollaboratorRole
+    addedAt: datetime
+
+
+class TaskAssign(BaseModel):
+    """Schema for assigning a user to a task."""
+    userId: str = Field(..., description="User ID to assign")
+    role: CollaboratorRole = Field(CollaboratorRole.ASSIGNEE, description="Role to assign")
+
+
+class TaskInvite(BaseModel):
+    """Schema for inviting a user by email to a task."""
+    email: EmailStr = Field(..., description="Email of user to invite")
+    role: CollaboratorRole = Field(CollaboratorRole.EDITOR, description="Role to assign")
+
+
+class TaskCollaboratorResponse(BaseModel):
+    """Schema for collaborator response."""
+    userId: str
+    email: str
+    name: str
+    role: str
+    addedAt: datetime
+
+
+class TaskCollaboratorList(BaseModel):
+    """Schema for collaborators list response."""
+    collaborators: List[TaskCollaboratorResponse]
     total: int

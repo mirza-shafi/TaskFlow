@@ -4,10 +4,10 @@ from typing import List
 
 from app.database import get_database
 from app.core.dependencies import get_current_user
-from app.schemas.folder import FolderCreate, FolderUpdate, FolderResponse
+from app.schemas.folder import FolderCreate, FolderUpdate, FolderResponse, FolderShare
 from app.schemas.common import MessageResponse
 from app.services.folder_service import FolderService
-from app.utils.exceptions import NotFoundException
+from app.utils.exceptions import NotFoundException, ValidationException
 
 
 router = APIRouter(prefix="/folders", tags=["Folders"])
@@ -98,3 +98,67 @@ async def delete_folder(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/{folder_id}/share", response_model=FolderResponse)
+async def share_folder(
+    folder_id: str,
+    share_data: FolderShare,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Share a folder with a team.
+    
+    Only the folder owner can share folders.
+    Team members will be able to view and access the folder's contents.
+    
+    - **teamId**: ID of the team to share with (required)
+    """
+    folder_service = FolderService(db)
+    
+    try:
+        folder = await folder_service.share_folder(
+            folder_id=folder_id,
+            user_id=str(current_user["_id"]),
+            team_id=share_data.teamId
+        )
+        folder["_id"] = str(folder["_id"])
+        return folder
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.delete("/{folder_id}/share/{team_id}", response_model=FolderResponse)
+async def unshare_folder(
+    folder_id: str,
+    team_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Unshare a folder from a team.
+    
+    Only the folder owner can unshare folders.
+    """
+    folder_service = FolderService(db)
+    
+    try:
+        folder = await folder_service.unshare_folder(
+            folder_id=folder_id,
+            user_id=str(current_user["_id"]),
+            team_id=team_id
+        )
+        folder["_id"] = str(folder["_id"])
+        return folder
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+

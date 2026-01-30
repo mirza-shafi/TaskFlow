@@ -4,10 +4,13 @@ from typing import Optional
 
 from app.database import get_database
 from app.core.dependencies import get_current_user
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskList
+from app.schemas.task import (
+    TaskCreate, TaskUpdate, TaskResponse, TaskList,
+    TaskAssign, TaskInvite, TaskCollaboratorList
+)
 from app.schemas.common import MessageResponse
 from app.services.task_service import TaskService
-from app.utils.exceptions import NotFoundException
+from app.utils.exceptions import NotFoundException, ValidationException
 
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -203,3 +206,129 @@ async def permanently_delete_task(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/{task_id}/assign", response_model=TaskResponse)
+async def assign_task(
+    task_id: str,
+    assign_data: TaskAssign,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Assign a specific user to a task.
+    
+    Enables granular task-level collaboration. Only task owners or editors can assign users.
+    
+    - **userId**: User ID to assign (required)
+    - **role**: Role to assign (viewer, editor, assignee - default: assignee)
+    """
+    task_service = TaskService(db)
+    
+    try:
+        task = await task_service.assign_task(
+            task_id=task_id,
+            owner_id=str(current_user["_id"]),
+            assignee_id=assign_data.userId,
+            role=assign_data.role.value
+        )
+        task["_id"] = str(task["_id"])
+        return task
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/{task_id}/invite", response_model=TaskResponse)
+async def invite_task_collaborator(
+    task_id: str,
+    invite_data: TaskInvite,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Invite an external user by email to view/edit only this task.
+    
+    Perfect for ad-hoc collaboration without sharing entire teams or folders.
+    Only task owners or editors can invite collaborators.
+    
+    - **email**: Email of user to invite (required)
+    - **role**: Role to assign (viewer, editor, assignee - default: editor)
+    """
+    task_service = TaskService(db)
+    
+    try:
+        task = await task_service.invite_task_collaborator(
+            task_id=task_id,
+            owner_id=str(current_user["_id"]),
+            email=invite_data.email,
+            role=invite_data.role.value
+        )
+        task["_id"] = str(task["_id"])
+        return task
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/{task_id}/collaborators", response_model=TaskCollaboratorList)
+async def get_task_collaborators(
+    task_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    See everyone who has access to this specific task.
+    
+    Shows all users who have been assigned or invited to collaborate on this task.
+    """
+    task_service = TaskService(db)
+    
+    try:
+        collaborators = await task_service.get_task_collaborators(
+            task_id=task_id,
+            user_id=str(current_user["_id"])
+        )
+        return {"collaborators": collaborators, "total": len(collaborators)}
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.delete("/{task_id}/collaborators/{collaborator_id}", response_model=MessageResponse)
+async def remove_task_collaborator(
+    task_id: str,
+    collaborator_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Revoke a specific person's access to the task.
+    
+    Only task owners or editors can remove collaborators.
+    """
+    task_service = TaskService(db)
+    
+    try:
+        result = await task_service.remove_task_collaborator(
+            task_id=task_id,
+            owner_id=str(current_user["_id"]),
+            collaborator_id=collaborator_id
+        )
+        return result
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+

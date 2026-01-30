@@ -7,7 +7,7 @@ import os
 
 from app.config import settings
 from app.database import Database
-from app.api.v1 import auth, users, tasks, folders, teams
+from app.api.v1 import auth, users, tasks, folders, teams, notes
 from app.utils.exceptions import AppException
 
 
@@ -87,6 +87,7 @@ app.include_router(users.router, prefix="/api/v1")
 app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(folders.router, prefix="/api/v1")
 app.include_router(teams.router, prefix="/api/v1")
+app.include_router(notes.router, prefix="/api/v1")
 
 # Root endpoint
 @app.get("/", tags=["Root"])
