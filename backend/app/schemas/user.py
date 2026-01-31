@@ -3,6 +3,21 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 
+class NotificationPreferences(BaseModel):
+    """Schema for notification preferences."""
+    emailNotifications: bool = True
+    taskAssigned: bool = True
+    taskShared: bool = True
+    noteShared: bool = True
+    teamInvite: bool = True
+    teamMemberAdded: bool = True
+    habitMilestone: bool = True
+    habitShared: bool = True
+    folderShared: bool = True
+    commentAdded: bool = True
+    mention: bool = True
+
+
 class UserRegister(BaseModel):
     """Schema for user registration."""
     name: str = Field(..., min_length=2, max_length=100)
@@ -33,6 +48,7 @@ class UserResponse(BaseModel):
     appearance: Optional[Dict[str, Any]] = None
     bio: Optional[str] = None
     oauthProvider: str = "local"
+    notificationPreferences: Optional[NotificationPreferences] = None
     createdAt: datetime
     updatedAt: datetime
     
@@ -59,6 +75,7 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=500)
     avatarUrl: Optional[str] = None
     appearance: Optional[Dict[str, Any]] = None
+    notificationPreferences: Optional[NotificationPreferences] = None
 
 
 class PasswordChange(BaseModel):

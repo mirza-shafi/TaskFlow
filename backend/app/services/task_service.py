@@ -103,6 +103,12 @@ class TaskService:
             "dueDate": task_data.get("dueDate"),
             "folderId": task_data.get("folderId"),
             "teamId": task_data.get("teamId"),
+            "tags": task_data.get("tags", []),  # Simple string tags
+            "color": task_data.get("color"),
+            "labels": task_data.get("labels", []),
+            "position": task_data.get("position"),
+            "subtasks": task_data.get("subtasks", []),
+            "attachments": task_data.get("attachments", []),
             "collaborators": [],  # Initialize empty collaborators list
             "isDeleted": False,
             "deletedAt": None,
@@ -138,7 +144,14 @@ class TaskService:
         # Build update document
         update_doc = {"updatedAt": datetime.utcnow()}
         
-        for field in ["title", "description", "status", "priority", "dueDate", "folderId", "teamId"]:
+        # Include all updatable fields
+        updatable_fields = [
+            "title", "description", "status", "priority", "dueDate", 
+            "folderId", "teamId", "tags", "color", "labels", "position", 
+            "subtasks", "attachments"
+        ]
+        
+        for field in updatable_fields:
             if field in task_data and task_data[field] is not None:
                 update_doc[field] = task_data[field]
         
@@ -552,4 +565,95 @@ class TaskService:
         )
         
         return {"message": "Collaborator removed successfully"}
+    
+    async def duplicate_task(self, task_id: str, user_id: str) -> Dict[str, Any]:
+        """
+        Duplicate an existing task.
+        
+        Args:
+            task_id: Task's ObjectId as string
+            user_id: User's ID (for authorization)
+        
+        Returns:
+            Newly created task document
+        
+        Raises:
+            NotFoundException: If task not found
+        """
+        # Get the original task
+        original_task = await self.get_task_by_id(task_id, user_id)
+        
+        # Create a copy with modified title
+        task_copy = {
+            "userId": user_id,
+            "title": f"{original_task['title']} (Copy)",
+            "description": original_task.get("description", ""),
+            "status": "todo",  # Reset to todo
+            "priority": original_task.get("priority", "medium"),
+            "dueDate": original_task.get("dueDate"),
+            "folderId": original_task.get("folderId"),
+            "teamId": original_task.get("teamId"),
+            "color": original_task.get("color"),
+            "labels": original_task.get("labels", []),
+            "position": None,  # Will be positioned at end
+            "subtasks": original_task.get("subtasks", []),
+            "attachments": original_task.get("attachments", []),
+            "collaborators": [],  # Don't copy collaborators
+            "isDeleted": False,
+            "deletedAt": None,
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+        
+        result = await self.tasks_collection.insert_one(task_copy)
+        task_copy["_id"] = result.inserted_id
+        
+        return task_copy
+    
+    async def reorder_tasks(
+        self,
+        user_id: str,
+        updates: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
+        """
+        Bulk update task positions and optionally status.
+        
+        Args:
+            user_id: User's ID (for authorization)
+            updates: List of updates with taskId, position, and optional status
+        
+        Returns:
+            Success message
+        
+        Raises:
+            NotFoundException: If any task not found
+            ValidationException: If user doesn't own tasks
+        """
+        for update in updates:
+            task_id = update.get("taskId")
+            position = update.get("position")
+            new_status = update.get("status")
+            
+            if not ObjectId.is_valid(task_id):
+                raise ValidationException(f"Invalid task ID: {task_id}")
+            
+            # Build update document
+            update_doc = {
+                "position": position,
+                "updatedAt": datetime.utcnow()
+            }
+            
+            if new_status:
+                update_doc["status"] = new_status
+            
+            # Update the task
+            result = await self.tasks_collection.update_one(
+                {"_id": ObjectId(task_id), "userId": user_id},
+                {"$set": update_doc}
+            )
+            
+            if result.matched_count == 0:
+                raise NotFoundException(f"Task {task_id} not found or you don't have permission")
+        
+        return {"message": f"Successfully updated {len(updates)} task(s)"}
 

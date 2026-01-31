@@ -25,6 +25,27 @@ class TaskPriority(str, Enum):
     HIGH = "high"
 
 
+class Label(BaseModel):
+    """Schema for task label."""
+    name: str = Field(..., min_length=1, max_length=50)
+    color: str = Field(..., pattern="^#[0-9A-Fa-f]{6}$")  # Hex color code
+
+
+class Subtask(BaseModel):
+    """Schema for subtask."""
+    title: str = Field(..., min_length=1, max_length=200)
+    completed: bool = False
+
+
+class Attachment(BaseModel):
+    """Schema for task attachment."""
+    filename: str
+    url: str
+    fileType: str  # e.g., 'image/png', 'application/pdf'
+    size: Optional[int] = None  # File size in bytes
+    uploadedAt: datetime = Field(default_factory=datetime.utcnow)
+
+
 class TaskCreate(BaseModel):
     """Schema for creating a task."""
     title: str = Field(..., min_length=1, max_length=200)
@@ -34,6 +55,12 @@ class TaskCreate(BaseModel):
     dueDate: Optional[datetime] = None
     folderId: Optional[str] = None
     teamId: Optional[str] = None
+    tags: Optional[List[str]] = Field(default_factory=list)  # Simple string tags for categorization
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")  # Hex color code
+    labels: Optional[List[Label]] = Field(default_factory=list)
+    position: Optional[int] = None  # For custom ordering within status columns
+    subtasks: Optional[List[Subtask]] = Field(default_factory=list)
+    attachments: Optional[List[Attachment]] = Field(default_factory=list)
 
 
 class TaskUpdate(BaseModel):
@@ -45,6 +72,12 @@ class TaskUpdate(BaseModel):
     dueDate: Optional[datetime] = None
     folderId: Optional[str] = None
     teamId: Optional[str] = None
+    tags: Optional[List[str]] = None  # Simple string tags
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    labels: Optional[List[Label]] = None
+    position: Optional[int] = None
+    subtasks: Optional[List[Subtask]] = None
+    attachments: Optional[List[Attachment]] = None
 
 
 class TaskResponse(BaseModel):
@@ -58,8 +91,14 @@ class TaskResponse(BaseModel):
     dueDate: Optional[datetime] = None
     folderId: Optional[str] = None
     teamId: Optional[str] = None
+    tags: Optional[List[str]] = Field(default_factory=list)  # Simple string tags
     isDeleted: bool = False
     deletedAt: Optional[datetime] = None
+    color: Optional[str] = None
+    labels: Optional[List[Label]] = Field(default_factory=list)
+    position: Optional[int] = None
+    subtasks: Optional[List[Subtask]] = Field(default_factory=list)
+    attachments: Optional[List[Attachment]] = Field(default_factory=list)
     createdAt: datetime
     updatedAt: datetime
     
@@ -121,3 +160,15 @@ class TaskCollaboratorList(BaseModel):
     """Schema for collaborators list response."""
     collaborators: List[TaskCollaboratorResponse]
     total: int
+
+
+class TaskPositionUpdate(BaseModel):
+    """Schema for updating a single task's position."""
+    taskId: str = Field(..., description="Task ID")
+    position: int = Field(..., description="New position")
+    status: Optional[TaskStatus] = Field(None, description="New status (for drag between columns)")
+
+
+class TaskReorderRequest(BaseModel):
+    """Schema for bulk task reordering."""
+    updates: List[TaskPositionUpdate] = Field(..., description="List of task position updates")

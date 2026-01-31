@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import Optional
 from datetime import date
@@ -12,15 +14,17 @@ from app.schemas.habit import (
 from app.schemas.common import MessageResponse
 from app.services.habit_service import HabitService
 from app.utils.exceptions import NotFoundException, ValidationException
+from app.utils.serializers import serialize_dates
 
 
 router = APIRouter(prefix="/habits", tags=["Habits"])
 
 
-@router.get("", response_model=HabitList)
+@router.get("")
 async def get_habits(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     category: Optional[str] = Query(None, description="Filter by category"),
+    date: Optional[date_type] = Query(None, description="Check completion status for this date"),
     current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
@@ -32,6 +36,7 @@ async def get_habits(
     Optional filters:
     - **is_active**: Filter active/archived habits
     - **category**: Filter by category (health, fitness, productivity, etc.)
+    - **date**: Check completion status for specific date (YYYY-MM-DD)
     """
     habit_service = HabitService(db)
     
@@ -39,14 +44,35 @@ async def get_habits(
         habits = await habit_service.get_habits(
             user_id=str(current_user["_id"]),
             is_active=is_active,
-            category=category
+            category=category,
+            check_date=date
         )
         
-        # Convert ObjectIds to strings
+        # Serialize all data including dates recursively
+        habits = serialize_dates(habits)
+        
+        # Convert ObjectIds to strings (explicitly handled here too for safety)
         for habit in habits:
             habit["_id"] = str(habit["_id"])
         
-        return {"habits": habits, "total": len(habits)}
+        # Return JSON response directly
+        return JSONResponse(content={"habits": habits, "total": len(habits)})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.get("/heatmap")
+async def get_heatmap(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    try:
+        habit_service = HabitService(db)
+        heatmap = await habit_service.get_heatmap_data(str(current_user["_id"]))
+        return JSONResponse(content=heatmap)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -76,6 +102,7 @@ async def create_habit(
             user_id=str(current_user["_id"]),
             habit_data=habit_data.model_dump()
         )
+        habit = serialize_dates(habit)
         habit["_id"] = str(habit["_id"])
         return habit
     except Exception as e:
@@ -93,6 +120,7 @@ async def get_habit(
     
     try:
         habit = await habit_service.get_habit_by_id(habit_id, str(current_user["_id"]))
+        habit = serialize_dates(habit)
         habit["_id"] = str(habit["_id"])
         return habit
     except NotFoundException as e:
@@ -123,13 +151,17 @@ async def update_habit(
             user_id=str(current_user["_id"]),
             habit_data=habit_data.model_dump(exclude_unset=True)
         )
+        habit = serialize_dates(habit)
         habit["_id"] = str(habit["_id"])
-        return habit
+        # Use JSONResponse
+        return JSONResponse(content=habit)
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
@@ -251,12 +283,17 @@ async def get_habit_logs(
             end_date=end_date
         )
         
-        return {
+        # Serialize everything
+        habit = serialize_dates(habit)
+        logs = serialize_dates(logs)
+        
+        result = {
             "habitId": habit_id,
             "habitName": habit["name"],
             "logs": logs,
             "total": len(logs)
         }
+        return JSONResponse(content=result)
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationException as e:

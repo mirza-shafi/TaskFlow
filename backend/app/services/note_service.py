@@ -160,6 +160,7 @@ class NoteService:
             "content": note_data.get("content", ""),
             "folderId": note_data.get("folderId"),
             "tags": note_data.get("tags", []),
+            "color": note_data.get("color"),  # Hex color code
             "isPinned": note_data.get("isPinned", False),
             "isFavorite": note_data.get("isFavorite", False),
             "collaborators": [],  # Initialize empty collaborators list

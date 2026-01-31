@@ -21,15 +21,17 @@ class HabitService:
         self,
         user_id: str,
         is_active: Optional[bool] = None,
-        category: Optional[str] = None
+        category: Optional[str] = None,
+        check_date: Optional[date] = None
     ) -> List[Dict[str, Any]]:
         """
-        Get all habits for a user or shared with them.
+        Get all habits with streak info.
         
         Args:
             user_id: User's ID
             is_active: Filter by active status (optional)
             category: Filter by category (optional)
+            check_date: Date to check completion status for (defaults to today)
         
         Returns:
             List of habit documents with streak information
@@ -54,9 +56,66 @@ class HabitService:
             habit["currentStreak"] = await self._calculate_current_streak(str(habit["_id"]))
             habit["longestStreak"] = await self._calculate_longest_streak(str(habit["_id"]))
             habit["totalCompletions"] = await self._count_total_completions(str(habit["_id"]))
+            habit["completedToday"] = await self._is_completed_today(str(habit["_id"]), check_date)
         
         return habits
     
+    async def _is_completed_today(self, habit_id: str) -> bool:
+        """Check if habit is completed today."""
+        today = date.today()
+        # Convert to datetime for query
+        query_date = datetime.combine(today, datetime.min.time())
+        
+        log = await self.habit_logs_collection.find_one({
+            "habitId": habit_id,
+            "date": query_date,
+            "completed": True
+        })
+        
+        # Fallback for ISO strings
+        if not log:
+            log = await self.habit_logs_collection.find_one({
+                "habitId": habit_id,
+                "date": today.isoformat(),
+                "completed": True
+            })
+            
+        return bool(log)
+    
+    async def get_heatmap_data(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get heat map data (date -> count) for the last year."""
+        # Calculate start date (1 year ago)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=365)
+        
+        pipeline = [
+            {
+                "$match": {
+                    "userId": user_id,
+                    "completed": True,
+                    "date": {"$gte": start_date}
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "$dateToString": {"format": "%Y-%m-%d", "date": "$date"}
+                    },
+                    "count": {"$sum": 1}
+                }
+            },
+            {
+                "$sort": {"_id": 1}
+            }
+        ]
+        
+        results = await self.habit_logs_collection.aggregate(pipeline).to_list(length=None)
+        
+        # Transform to list
+        heatmap = [{"date": r["_id"], "count": r["count"]} for r in results]
+        
+        return heatmap
+
     async def get_habit_by_id(self, habit_id: str, user_id: str) -> Dict[str, Any]:
         """
         Get a single habit by ID with permission check.
@@ -251,12 +310,23 @@ class HabitService:
         if not habit:
             raise NotFoundException(f"Habit with ID {habit_id} not found or you don't have access")
         
+        # Convert date to datetime for consistent storage/querying
+        log_datetime = datetime.combine(log_date, datetime.min.time())
+        
         # Check if log already exists for this date
         existing_log = await self.habit_logs_collection.find_one({
             "habitId": habit_id,
             "userId": user_id,
-            "date": log_date
+            "date": log_datetime
         })
+        
+        # Fallback for legacy string dates
+        if not existing_log:
+             existing_log = await self.habit_logs_collection.find_one({
+                "habitId": habit_id,
+                "userId": user_id,
+                "date": log_date.isoformat()
+            })
         
         if existing_log:
             # Update existing log
@@ -266,7 +336,8 @@ class HabitService:
                     "$set": {
                         "completed": completed,
                         "notes": notes,
-                        "updatedAt": datetime.utcnow()
+                        "updatedAt": datetime.utcnow(),
+                        "date": log_datetime # Ensure format is upgraded if it was string
                     }
                 }
             )
@@ -276,7 +347,7 @@ class HabitService:
             log_document = {
                 "habitId": habit_id,
                 "userId": user_id,
-                "date": log_date,
+                "date": log_datetime,
                 "completed": completed,
                 "notes": notes,
                 "loggedAt": datetime.utcnow(),
@@ -311,14 +382,25 @@ class HabitService:
         if not ObjectId.is_valid(habit_id):
             raise ValidationException("Invalid habit ID format")
         
+        # Convert date to datetime
+        log_datetime = datetime.combine(log_date, datetime.min.time())
+        
         result = await self.habit_logs_collection.delete_one({
             "habitId": habit_id,
             "userId": user_id,
-            "date": log_date
+            "date": log_datetime
         })
         
         if result.deleted_count == 0:
-            raise NotFoundException(f"Log not found for date {log_date}")
+            # Try converting to string for legacy support
+            result = await self.habit_logs_collection.delete_one({
+                "habitId": habit_id,
+                "userId": user_id,
+                "date": log_date.isoformat()
+            })
+            
+            if result.deleted_count == 0:
+                raise NotFoundException(f"Log not found for date {log_date}")
         
         return {"message": "Log deleted successfully"}
     
@@ -361,9 +443,9 @@ class HabitService:
         if start_date or end_date:
             date_filter = {}
             if start_date:
-                date_filter["$gte"] = start_date
+                date_filter["$gte"] = datetime.combine(start_date, datetime.min.time())
             if end_date:
-                date_filter["$lte"] = end_date
+                date_filter["$lte"] = datetime.combine(end_date, datetime.max.time())
             query["date"] = date_filter
         
         logs = await self.habit_logs_collection.find(query).sort("date", -1).to_list(length=None)
@@ -581,12 +663,23 @@ class HabitService:
         
         # Check backwards from today
         while True:
+            # Convert date to datetime for MongoDB query
+            query_date = datetime.combine(check_date, datetime.min.time())
+            
             log = await self.habit_logs_collection.find_one({
                 "habitId": habit_id,
-                "date": check_date,
+                "date": query_date,  # Use datetime
                 "completed": True
             })
             
+            # Fallback: also check simple date in case it was stored as string (legacy)
+            if not log:
+                log = await self.habit_logs_collection.find_one({
+                    "habitId": habit_id,
+                    "date": check_date.isoformat(),
+                    "completed": True
+                })
+
             if log:
                 streak += 1
                 check_date -= timedelta(days=1)
@@ -700,63 +793,7 @@ class HabitService:
             "topStreaks": top_streaks
         }
     
-    async def get_heatmap_data(
-        self,
-        user_id: str,
-        start_date: date,
-        end_date: date
-    ) -> List[Dict[str, Any]]:
-        """
-        Get heatmap data for a date range.
-        
-        Args:
-            user_id: User's ID
-            start_date: Start date
-            end_date: End date
-        
-        Returns:
-            List of daily completion counts
-        """
-        # Get all logs in date range
-        logs = await self.habit_logs_collection.find({
-            "userId": user_id,
-            "completed": True,
-            "date": {"$gte": start_date, "$lte": end_date}
-        }).to_list(length=None)
-        
-        # Group by date
-        daily_data = {}
-        for log in logs:
-            log_date = log["date"]
-            if log_date not in daily_data:
-                daily_data[log_date] = {
-                    "date": log_date,
-                    "completions": 0,
-                    "habits": []
-                }
-            daily_data[log_date]["completions"] += 1
-            
-            # Get habit name
-            habit = await self.habits_collection.find_one({"_id": ObjectId(log["habitId"])})
-            if habit:
-                daily_data[log_date]["habits"].append(habit["name"])
-        
-        # Fill in missing dates with zero completions
-        current_date = start_date
-        result = []
-        while current_date <= end_date:
-            if current_date in daily_data:
-                result.append(daily_data[current_date])
-            else:
-                result.append({
-                    "date": current_date,
-                    "completions": 0,
-                    "habits": []
-                })
-            current_date += timedelta(days=1)
-        
-        return result
-    
+
     async def get_social_feed(self, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """
         Get social feed of recent habit completions from shared habits.

@@ -6,7 +6,8 @@ from app.database import get_database
 from app.core.dependencies import get_current_user
 from app.schemas.task import (
     TaskCreate, TaskUpdate, TaskResponse, TaskList,
-    TaskAssign, TaskInvite, TaskCollaboratorList
+    TaskAssign, TaskInvite, TaskCollaboratorList,
+    TaskReorderRequest
 )
 from app.schemas.common import MessageResponse
 from app.services.task_service import TaskService
@@ -323,6 +324,60 @@ async def remove_task_collaborator(
             task_id=task_id,
             owner_id=str(current_user["_id"]),
             collaborator_id=collaborator_id
+        )
+        return result
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/{task_id}/duplicate", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+async def duplicate_task(
+    task_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Duplicate an existing task.
+    
+    Creates a copy of the task with all its properties except collaborators.
+    The new task will have "(Copy)" appended to its title.
+    """
+    task_service = TaskService(db)
+    
+    try:
+        task = await task_service.duplicate_task(task_id, str(current_user["_id"]))
+        task["_id"] = str(task["_id"])
+        return task
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.patch("/reorder", response_model=MessageResponse)
+async def reorder_tasks(
+    reorder_data: TaskReorderRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Bulk update task positions and optionally status.
+    
+    Used for drag-and-drop functionality in the board view.
+    Updates multiple tasks' positions and/or status in a single request.
+    
+    - **updates**: List of task position updates with taskId, position, and optional status
+    """
+    task_service = TaskService(db)
+    
+    try:
+        result = await task_service.reorder_tasks(
+            user_id=str(current_user["_id"]),
+            updates=[update.model_dump() for update in reorder_data.updates]
         )
         return result
     except NotFoundException as e:

@@ -16,6 +16,7 @@ class NoteCreate(BaseModel):
     content: str = Field("", description="Note content (supports Markdown or JSON-based Rich Text)")
     folderId: Optional[str] = Field(None, description="Folder ID to organize the note")
     tags: Optional[List[str]] = Field(default_factory=list, description="Tags for categorization")
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$", description="Hex color code for note background")
     isPinned: bool = Field(False, description="Whether the note is pinned to the top")
     isFavorite: bool = Field(False, description="Whether the note is marked as favorite")
 
@@ -26,6 +27,7 @@ class NoteUpdate(BaseModel):
     content: Optional[str] = Field(None, description="Note content (supports Markdown or JSON-based Rich Text)")
     folderId: Optional[str] = Field(None, description="Folder ID to organize the note")
     tags: Optional[List[str]] = Field(None, description="Tags for categorization")
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$", description="Hex color code")
     isPinned: Optional[bool] = Field(None, description="Whether the note is pinned to the top")
     isFavorite: Optional[bool] = Field(None, description="Whether the note is marked as favorite")
 
@@ -43,6 +45,7 @@ class NoteResponse(BaseModel):
     content: str
     folderId: Optional[str] = None
     tags: List[str] = []
+    color: Optional[str] = None  # Hex color code
     isPinned: bool = False
     isFavorite: bool = False
     isDeleted: bool = False
