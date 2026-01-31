@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, ReactNode } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppearanceProvider } from './context/AppearanceContext';
@@ -11,25 +11,20 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
-import TodoListPage from './pages/TodoListPage';
-import SettingsPage from './pages/SettingsPage';
-import StatisticsPage from './pages/StatisticsPage';
-import BinPage from './pages/BinPage';
-import NotePage from './pages/NotePage';
-import HabitTrackerPage from './pages/HabitTrackerPage';
+import DashboardPage from './pages/DashboardPage';
 
-interface ProtectedRouteProps {
-  children: ReactNode;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
+  
   if (loading) {
-    return <div>Loading session...</div>;
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>;
   }
+  
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+  
   return <>{children}</>;
 };
 
@@ -37,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 function AppRoutes() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const previousUser = useRef( user);
+  const previousUser = useRef(user);
 
   useEffect(() => {
     // Check if the user state changed from "logged in" to "logged out"
@@ -56,62 +51,27 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      
+      {/* Protected Routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        } 
+      />
       <Route 
         path="/app" 
         element={
           <ProtectedRoute>
-            <TodoListPage />
+            <DashboardPage />
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/todo" 
-        element={
-          <ProtectedRoute>
-            <TodoListPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/settings" 
-        element={
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/statistics" 
-        element={
-          <ProtectedRoute>
-            <StatisticsPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/bin" 
-        element={
-          <ProtectedRoute>
-            <BinPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/note" 
-        element={
-          <ProtectedRoute>
-            <NotePage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/habits" 
-        element={
-          <ProtectedRoute>
-            <HabitTrackerPage />
-          </ProtectedRoute>
-        } 
-      />
+      
+      {/* Redirect any unknown routes to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

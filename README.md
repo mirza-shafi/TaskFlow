@@ -13,13 +13,16 @@ A modern, full-stack task management application with enterprise-grade authentic
 ## 🚀 Features
 
 ### Core Functionality
-- ✅ **Task Management** - Create, update, delete, and organize tasks
-- 📁 **Folder Organization** - Group tasks into folders
-- 👥 **Team Collaboration** - Share tasks and folders with team members
+- ✅ **Task Management** - Create, update, delete, and organize tasks with collaboration
+- 📝 **Notes** - Rich text notes with Markdown support, pinning, and favorites
+- 🎯 **Habit Tracking** - Build habits with streak tracking and accountability partners
+- 📁 **Folder Organization** - Group tasks and notes into folders
+- 👥 **Team Collaboration** - Share tasks, notes, folders with team members
 - 🎯 **Priority Levels** - High, Medium, Low priority tasks
 - 📅 **Due Dates** - Set and track task deadlines
-- 🏷️ **Tags** - Categorize tasks with custom tags
-- 🗑️ **Soft Delete** - Recover deleted tasks from bin
+- 🏷️ **Tags** - Categorize tasks and notes with custom tags
+- 🗑️ **Soft Delete** - Recover deleted tasks and notes from trash
+- 📊 **Analytics** - Comprehensive habit analytics with heatmaps and social feed
 
 ### Advanced Authentication 🔐
 - 📧 **Email Verification** - Verify user emails before account activation
@@ -66,7 +69,8 @@ A modern, full-stack task management application with enterprise-grade authentic
 
 ### Database
 - **Primary**: MongoDB Atlas
-- **Collections**: users, tasks, folders, teams, sessions, token_blacklist, security_logs
+- **Collections**: users, tasks, notes, habits, habit_logs, folders, teams, sessions, token_blacklist, security_logs
+
 
 ---
 
@@ -80,6 +84,9 @@ TaskFlow/
 │   │   │   ├── auth.py        # Authentication routes
 │   │   │   ├── users.py       # User management
 │   │   │   ├── tasks.py       # Task operations
+│   │   │   ├── notes.py       # Note operations
+│   │   │   ├── habits.py      # Habit tracking
+│   │   │   ├── analytics.py   # Analytics & insights
 │   │   │   ├── folders.py     # Folder management
 │   │   │   └── teams.py       # Team collaboration
 │   │   ├── core/              # Core functionality
@@ -262,7 +269,7 @@ For detailed email setup instructions, see `backend/EMAIL_SETUP_GUIDE.md`
 
 ## 📚 API Endpoints
 
-### Authentication
+### Authentication (11 endpoints)
 - `POST /api/v1/auth/register` - Register new user
 - `POST /api/v1/auth/verify-email` - Verify email with token
 - `POST /api/v1/auth/resend-verification` - Resend verification email
@@ -275,32 +282,81 @@ For detailed email setup instructions, see `backend/EMAIL_SETUP_GUIDE.md`
 - `GET /api/v1/auth/sessions` - Get active sessions
 - `DELETE /api/v1/auth/sessions/{id}` - Revoke specific session
 
-### Users
+### Users (5 endpoints)
 - `GET /api/v1/users/profile` - Get current user profile
-- `PUT /api/v1/users/profile` - Update profile
-- `POST /api/v1/users/change-password` - Change password
-- `DELETE /api/v1/users/account` - Delete account
+- `PUT /api/v1/users/profile` - Update profile (name, bio, appearance)
+- `POST /api/v1/users/upload-avatar` - Upload user avatar image
+- `PUT /api/v1/users/change-password` - Change password
+- `DELETE /api/v1/users/profile` - Delete account and all data
 
-### Tasks
-- `GET /api/v1/tasks` - Get all tasks
+### Tasks (13 endpoints)
+- `GET /api/v1/tasks` - Get all tasks (with filters: folder_id, status)
 - `POST /api/v1/tasks` - Create task
 - `GET /api/v1/tasks/{id}` - Get task by ID
 - `PUT /api/v1/tasks/{id}` - Update task
-- `DELETE /api/v1/tasks/{id}` - Delete task (soft delete)
-- `GET /api/v1/tasks/bin` - Get deleted tasks
-- `POST /api/v1/tasks/{id}/restore` - Restore from bin
+- `DELETE /api/v1/tasks/{id}` - Soft delete task (move to trash)
+- `GET /api/v1/tasks/trash` - Get all trashed tasks
+- `POST /api/v1/tasks/{id}/restore` - Restore task from trash
+- `DELETE /api/v1/tasks/{id}/permanent` - Permanently delete task
+- `POST /api/v1/tasks/{id}/assign` - Assign user to task
+- `POST /api/v1/tasks/{id}/invite` - Invite collaborator by email
+- `GET /api/v1/tasks/{id}/collaborators` - Get task collaborators
+- `DELETE /api/v1/tasks/{id}/collaborators/{user_id}` - Remove collaborator
 
-### Folders
+### Notes (14 endpoints)
+- `GET /api/v1/notes` - Get all notes (filters: folder_id, tags, is_pinned, is_archived, is_favorite)
+- `GET /api/v1/notes/favorites` - Get favorite/starred notes
+- `POST /api/v1/notes` - Create note (supports Markdown/Rich Text)
+- `GET /api/v1/notes/{id}` - Get note by ID
+- `PUT /api/v1/notes/{id}` - Update note
+- `PUT /api/v1/notes/{id}/pin` - Pin/unpin note
+- `DELETE /api/v1/notes/{id}` - Soft delete note (move to trash)
+- `GET /api/v1/notes/trash` - Get trashed notes
+- `POST /api/v1/notes/{id}/restore` - Restore note from trash
+- `DELETE /api/v1/notes/{id}/permanent` - Permanently delete note
+- `POST /api/v1/notes/{id}/invite` - Invite collaborator by email
+- `GET /api/v1/notes/{id}/collaborators` - Get note collaborators
+- `DELETE /api/v1/notes/{id}/collaborators/{user_id}` - Remove collaborator
+
+### Habits (13 endpoints)
+- `GET /api/v1/habits` - Get all habits (filters: is_active, category)
+- `POST /api/v1/habits` - Create habit
+- `GET /api/v1/habits/{id}` - Get habit by ID with streak info
+- `PUT /api/v1/habits/{id}` - Update habit
+- `DELETE /api/v1/habits/{id}` - Archive habit (soft delete)
+- `POST /api/v1/habits/{id}/log` - Mark habit as done for a date
+- `DELETE /api/v1/habits/{id}/log/{date}` - Remove habit log entry
+- `GET /api/v1/habits/{id}/logs` - Get habit logs (with date range)
+- `GET /api/v1/habits/logs/monthly` - Get all habit logs for a month
+- `POST /api/v1/habits/{id}/share` - Share habit with accountability partner
+- `DELETE /api/v1/habits/{id}/share/{user_id}` - Unshare habit
+- `GET /api/v1/habits/{id}/collaborators` - Get habit collaborators
+
+### Analytics (3 endpoints)
+- `GET /api/v1/analytics/summary` - Get comprehensive analytics summary
+- `GET /api/v1/analytics/heatmap` - Get heatmap data (GitHub-style contribution graph)
+- `GET /api/v1/analytics/social/feed` - Get social activity feed from shared habits
+
+### Folders (6 endpoints)
 - `GET /api/v1/folders` - Get all folders
 - `POST /api/v1/folders` - Create folder
 - `PUT /api/v1/folders/{id}` - Update folder
 - `DELETE /api/v1/folders/{id}` - Delete folder
+- `POST /api/v1/folders/{id}/share` - Share folder with team
+- `DELETE /api/v1/folders/{id}/share/{team_id}` - Unshare folder from team
 
-### Teams
-- `GET /api/v1/teams` - Get all teams
+### Teams (9 endpoints)
+- `GET /api/v1/teams` - Get all teams (where user is owner or member)
 - `POST /api/v1/teams` - Create team
-- `PUT /api/v1/teams/{id}` - Update team
-- `DELETE /api/v1/teams/{id}` - Delete team
+- `PUT /api/v1/teams/{id}` - Update team (owner only)
+- `DELETE /api/v1/teams/{id}` - Delete team (owner only)
+- `GET /api/v1/teams/{id}/members` - Get team members
+- `POST /api/v1/teams/{id}/invite` - Invite member by email
+- `PUT /api/v1/teams/{id}/members/{user_id}/role` - Update member role
+- `DELETE /api/v1/teams/{id}/members/{user_id}` - Remove team member
+- `GET /api/v1/teams/{id}/activity` - Get team activity history
+
+**Total: 80+ API Endpoints**
 
 **Full API Documentation**: http://localhost:8000/docs
 
@@ -436,10 +492,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📊 Project Stats
 
-- **Backend**: ~2,500+ lines of Python code
+- **Backend**: ~5,000+ lines of Python code
 - **Frontend**: React with TypeScript
-- **API Endpoints**: 25+ endpoints
-- **Database Collections**: 7 collections
+- **API Endpoints**: 80+ endpoints across 8 modules
+- **Database Collections**: 10+ collections
 - **Authentication**: Enterprise-grade security
 - **Email Templates**: 3 beautiful HTML templates
 - **Documentation**: Auto-generated Swagger UI
