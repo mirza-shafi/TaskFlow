@@ -65,7 +65,8 @@
     --text-tertiary: 220 9% 64%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(238 84% 67%) 0%, hsl(280 84% 67%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(238 84% 67%) 0%, hsl(238 84% 60%) 100%);
+    --gradient-auth: linear-gradient(135deg, hsl(220 14% 96%) 0%, hsl(220 14% 93%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(160 84% 39%) 100%);
     --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
     
@@ -134,7 +135,8 @@
     --text-tertiary: 215 14% 44%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(238 84% 67%) 0%, hsl(280 84% 67%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(238 84% 67%) 0%, hsl(238 84% 60%) 100%);
+    --gradient-auth: linear-gradient(135deg, hsl(224 47% 6%) 0%, hsl(224 47% 4%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(142 76% 42%) 0%, hsl(160 84% 44%) 100%);
     --gradient-surface: linear-gradient(180deg, hsl(224 47% 8%) 0%, hsl(224 47% 6%) 100%);
     
@@ -207,6 +209,10 @@
   /* Gradient backgrounds */
   .bg-gradient-primary {
     background: var(--gradient-primary);
+  }
+
+  .bg-gradient-auth {
+    background: var(--gradient-auth);
   }
 
   .bg-gradient-success {

@@ -62,7 +62,7 @@ export function AppSidebar({ collapsed, onToggle, onOpenSearch }: AppSidebarProp
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/');
   };
 
   useEffect(() => {

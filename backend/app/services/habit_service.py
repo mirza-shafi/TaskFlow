@@ -60,9 +60,9 @@ class HabitService:
         
         return habits
     
-    async def _is_completed_today(self, habit_id: str) -> bool:
-        """Check if habit is completed today."""
-        today = date.today()
+    async def _is_completed_today(self, habit_id: str, check_date: Optional[date] = None) -> bool:
+        """Check if habit is completed on the specified date (defaults to today)."""
+        today = check_date if check_date else datetime.utcnow().date()
         # Convert to datetime for query
         query_date = datetime.combine(today, datetime.min.time())
         

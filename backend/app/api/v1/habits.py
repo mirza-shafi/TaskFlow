@@ -24,7 +24,7 @@ router = APIRouter(prefix="/habits", tags=["Habits"])
 async def get_habits(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     category: Optional[str] = Query(None, description="Filter by category"),
-    date: Optional[date_type] = Query(None, description="Check completion status for this date"),
+    date: Optional[date] = Query(None, description="Check completion status for this date"),
     current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):

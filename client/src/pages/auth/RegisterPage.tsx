@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Sparkles, ArrowRight, Loader2, Check } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, ArrowRight, ArrowLeft, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,8 +12,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { toast } from 'sonner';
 
 const registerSchema = z.object({
-  full_name: z.string().min(2, 'Name must be at least 2 characters'),
-  username: z.string().min(3, 'Username must be at least 3 characters').regex(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
@@ -52,14 +51,15 @@ export default function RegisterPage() {
     try {
       await registerUser({
         email: data.email,
-        username: data.username,
         password: data.password,
-        full_name: data.full_name,
+        name: data.name,
       });
-      toast.success('Account created successfully!');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Failed to create account. Please try again.');
+      toast.success('Account created! Please verify your email to login.');
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Failed to create account. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -68,12 +68,12 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Decorative */}
-      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-primary p-8">
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-auth p-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="max-w-md text-primary-foreground"
+          className="max-w-md text-foreground"
         >
           <h2 className="text-3xl font-bold mb-6">Start your productivity journey</h2>
           
@@ -91,10 +91,10 @@ export default function RegisterPage() {
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="flex items-center gap-3"
               >
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-foreground/20">
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary">
                   <Check className="w-4 h-4" />
                 </div>
-                <span className="text-primary-foreground/90">{feature}</span>
+                <span className="text-muted-foreground">{feature}</span>
               </motion.div>
             ))}
           </div>
@@ -109,6 +109,15 @@ export default function RegisterPage() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
+          {/* Back to Home */}
+          <Link 
+            to="/" 
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-6 group"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to Home
+          </Link>
+
           {/* Logo */}
           <div className="flex items-center gap-2 mb-8">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-primary">
@@ -127,30 +136,17 @@ export default function RegisterPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
-                  id="full_name"
+                  id="name"
                   placeholder="John Doe"
-                  {...register('full_name')}
+                  {...register('name')}
                   className="h-11"
                 />
-                {errors.full_name && (
-                  <p className="text-sm text-destructive">{errors.full_name.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  placeholder="johndoe"
-                  {...register('username')}
-                  className="h-11"
-                />
-                {errors.username && (
-                  <p className="text-sm text-destructive">{errors.username.message}</p>
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name.message}</p>
                 )}
               </div>
             </div>

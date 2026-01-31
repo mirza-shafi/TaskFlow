@@ -134,7 +134,7 @@ export default function SettingsPage() {
       toast.success('Logged out from all devices');
       setLogoutAllConfirmOpen(false);
       await logout();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       toast.error('Failed to logout from all devices');
       console.error('Logout all error:', error);
