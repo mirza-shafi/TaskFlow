@@ -7,6 +7,8 @@ A modern, full-stack task management application with enterprise-grade authentic
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python)
+![Docker](https://img.shields.io/badge/Docker-Optimized-2496ED?logo=docker)
+![Docker Image](https://img.shields.io/badge/Image%20Size-~295MB-blue)
 
 ---
 
@@ -77,6 +79,9 @@ TaskFlow/
 │   │   ├── core/              # Security and config
 │   │   ├── services/          # Business logic layer
 │   │   └── schemas/           # Pydantic data models
+│   ├── Dockerfile             # Optimized production image (Alpine)
+│   ├── Dockerfile.dev         # Development image with hot reload
+│   ├── .dockerignore          # Docker build exclusions
 │   ├── venv/                  # Python virtual environment
 │   └── requirements.txt       # Backend dependencies
 │
@@ -86,14 +91,56 @@ TaskFlow/
 │   │   ├── pages/             # Application pages
 │   │   ├── lib/               # Utilities and API client
 │   │   └── App.tsx            # Main application entry
+│   ├── Dockerfile             # Multi-stage build (Node + Nginx Alpine)
+│   ├── .dockerignore          # Docker build exclusions
+│   ├── nginx.conf             # Optimized Nginx configuration
 │   └── package.json           # Frontend dependencies
 │
-└── README.md                  # This file
+├── docker-compose.yml         # Production orchestration
+├── docker-compose.dev.yml     # Development orchestration
+├── .env.example               # Environment variables template
+├── .dockerignore              # Root-level exclusions
+│
+├── start-docker.sh            # Quick start script (Linux/Mac)
+├── start-docker.bat           # Quick start script (Windows)
+├── build-optimized.sh         # Build optimized images
+├── build-optimized.bat        # Build script (Windows)
+├── test-docker-optimization.sh # Test image sizes
+│
+├── README.md                  # This file
+├── DOCKER_README.md           # Comprehensive Docker guide
+└── DOCKER_OPTIMIZATION.md     # Optimization details & benchmarks
 ```
 
 ---
 
 ## 🚀 Getting Started
+
+### 🐳 Option 1: Docker (Recommended)
+
+The fastest way to run TaskFlow is using Docker:
+
+```bash
+# 1. Copy environment file
+cp .env.example .env
+
+# 2. Edit .env with your MongoDB URI and credentials
+nano .env
+
+# 3. Run with Docker Compose
+docker-compose up -d
+```
+
+**Access:**
+- Frontend: http://localhost:80
+- Backend: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+📖 See [DOCKER_README.md](DOCKER_README.md) for detailed Docker documentation.
+
+---
+
+### 💻 Option 2: Local Development
 
 ### Prerequisites
 - **Python**: 3.12+
@@ -192,11 +239,36 @@ TaskFlow/
 
 ## 🌐 Deployment
 
-### Backend (Render/Railway/AWS)
+### 🐳 Docker Deployment (Recommended)
+
+**On any VPS/Cloud (AWS EC2, DigitalOcean, Linode, etc.)**
+
+1. Clone repository and setup environment:
+   ```bash
+   git clone https://github.com/mirza-shafi/TaskFlow.git
+   cd TaskFlow
+   cp .env.example .env
+   nano .env  # Add your credentials
+   ```
+
+2. Run with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. (Optional) Setup reverse proxy with Nginx/Caddy for custom domain and SSL
+
+📖 See [DOCKER_README.md](DOCKER_README.md) for complete Docker deployment guide.
+
+---
+
+### Traditional Deployment
+
+**Backend (Render/Railway/AWS)**
 1. Set environment variables in your cloud provider.
 2. Use the start command: `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
 
-### Frontend (Vercel/Netlify)
+**Frontend (Vercel/Netlify)**
 1. Build the project:
    ```bash
    cd client

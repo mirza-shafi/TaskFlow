@@ -8,9 +8,11 @@ build/
 .idea/
 .vscode/
 
-# Markdown files (except README.md)
+# Markdown files (except README.md and DOCKER docs)
 *.md
 !README.md
+!DOCKER*.md
+!**/README*.md
 
 # Python
 __pycache__/

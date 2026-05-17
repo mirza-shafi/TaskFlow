@@ -1,0 +1,38 @@
+# Development Dockerfile - FastAPI with hot reload
+FROM python:3.12-alpine
+
+# Install build and runtime dependencies
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    python3-dev \
+    libmagic \
+    cargo \
+    rust \
+    wget
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code (will be overridden by volume mount)
+COPY . .
+
+# Create uploads directory
+RUN mkdir -p uploads/avatars
+
+# Expose port
+EXPOSE 8000
+
+# Run with hot reload
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
