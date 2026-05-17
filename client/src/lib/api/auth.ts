@@ -23,22 +23,6 @@ export const register = async (
 };
 
 /**
- * Verify email with token
- */
-export const verifyEmail = async (token: string): Promise<MessageResponse> => {
-  const response = await apiClient.post<MessageResponse>('/auth/verify-email', { token });
-  return response.data;
-};
-
-/**
- * Resend verification email
- */
-export const resendVerification = async (email: string): Promise<MessageResponse> => {
-  const response = await apiClient.post<MessageResponse>('/auth/resend-verification', { email });
-  return response.data;
-};
-
-/**
  * Login with email and password
  */
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {

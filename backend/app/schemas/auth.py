@@ -2,15 +2,6 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 
-class EmailVerificationRequest(BaseModel):
-    """Request to verify email with token."""
-    token: str = Field(..., description="Email verification token")
-
-
-class ResendVerificationRequest(BaseModel):
-    """Request to resend verification email."""
-    email: EmailStr = Field(..., description="Email address")
-
 
 class ForgotPasswordRequest(BaseModel):
     """Request to initiate password reset."""

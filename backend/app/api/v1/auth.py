@@ -6,8 +6,6 @@ from app.services.auth_service import AuthService
 from app.services.session_service import SessionService
 from app.schemas.user import UserRegister, UserLogin
 from app.schemas.auth import (
-    EmailVerificationRequest,
-    ResendVerificationRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     RefreshTokenRequest,
@@ -45,37 +43,6 @@ async def register(
         request=request
     )
     return result
-
-
-@router.post("/verify-email", response_model=MessageResponse)
-async def verify_email(
-    data: EmailVerificationRequest,
-    db: AsyncIOMotorDatabase = Depends(get_database)
-):
-    """
-    Verify user's email address with token from email.
-    
-    - **token**: Verification token from email
-    """
-    auth_service = AuthService(db)
-    result = await auth_service.verify_email(data.token)
-    return result
-
-
-@router.post("/resend-verification", response_model=MessageResponse)
-async def resend_verification(
-    data: ResendVerificationRequest,
-    db: AsyncIOMotorDatabase = Depends(get_database)
-):
-    """
-    Resend verification email.
-    
-    - **email**: User's email address
-    """
-    auth_service = AuthService(db)
-    result = await auth_service.resend_verification_email(data.email)
-    return result
-
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
