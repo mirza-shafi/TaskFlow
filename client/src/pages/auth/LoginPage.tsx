@@ -38,8 +38,9 @@ export default function LoginPage() {
       await login({ email: data.email, password: data.password });
       toast.success('Welcome back!');
       navigate('/app/dashboard');
-    } catch (error) {
-      toast.error('Invalid credentials. Please try again.');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Invalid credentials. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
