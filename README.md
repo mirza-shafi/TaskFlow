@@ -30,7 +30,7 @@ A modern, full-stack task management application with enterprise-grade authentic
 - 📊 **Analytics** - Comprehensive dashboard with completion rates and productivity insights
 
 ### Advanced Authentication 🔐
-- 📧 **Email Verification** - Secure account activation
+- 📧 **Real-time Email Validation** - Live domain and MX record deliverability checking
 - 🔑 **Password Reset** - Secure reset flow via email
 - 🎫 **Dual Token System** - Short-lived Access Tokens (15m) + Long-lived Refresh Tokens (30d)
 - 📱 **Session Management** - View and revoke active sessions across devices
@@ -207,7 +207,7 @@ docker-compose up -d
 ## 📚 API Endpoints
 
 ### Authentication
-- `POST /api/v1/auth/register` - Create account
+- `POST /api/v1/auth/register` - Create account (Instant, no email verification needed)
 - `POST /api/v1/auth/login` - Get access/refresh tokens
 - `POST /api/v1/auth/refresh` - Refresh access token
 - `POST /api/v1/auth/logout` - Revoke current session
