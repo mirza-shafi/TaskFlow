@@ -1,6 +1,5 @@
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import aiosmtplib
+import asyncio
+import resend
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pathlib import Path
 from typing import List, Optional
@@ -12,15 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Service for sending emails using SMTP."""
+    """Service for sending emails using Resend API."""
     
     def __init__(self):
-        self.smtp_host = settings.smtp_host
-        self.smtp_port = settings.smtp_port
-        self.smtp_user = settings.smtp_user
-        self.smtp_password = settings.smtp_password
-        self.smtp_from = settings.smtp_from
-        self.smtp_from_name = settings.smtp_from_name
+        self.email_from = settings.email_from
+        self.email_from_name = settings.email_from_name
+        if settings.resend_api_key:
+            resend.api_key = settings.resend_api_key
         
         # Setup Jinja2 for email templates
         template_dir = Path(__file__).parent.parent / "templates" / "emails"
@@ -39,7 +36,7 @@ class EmailService:
         text_content: Optional[str] = None
     ) -> bool:
         """
-        Send an email using SMTP.
+        Send an email using Resend API.
         
         Args:
             to_email: Recipient email address
@@ -50,31 +47,23 @@ class EmailService:
         Returns:
             True if email sent successfully, False otherwise
         """
+        if not settings.resend_api_key:
+            logger.error("RESEND_API_KEY is not set. Cannot send email.")
+            return False
+
         try:
-            # Create message
-            message = MIMEMultipart("alternative")
-            message["From"] = f"{self.smtp_from_name} <{self.smtp_from}>"
-            message["To"] = to_email
-            message["Subject"] = subject
-            
-            # Add plain text part if provided
+            params = {
+                "from": f"{self.email_from_name} <{self.email_from}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_content,
+            }
             if text_content:
-                text_part = MIMEText(text_content, "plain")
-                message.attach(text_part)
+                params["text"] = text_content
             
-            # Add HTML part
-            html_part = MIMEText(html_content, "html")
-            message.attach(html_part)
-            
-            # Send email
-            await aiosmtplib.send(
-                message,
-                hostname=self.smtp_host,
-                port=self.smtp_port,
-                username=self.smtp_user,
-                password=self.smtp_password,
-                start_tls=True
-            )
+            # Resend's Python SDK is synchronous, so we run it in a thread
+            # to prevent blocking the async event loop.
+            await asyncio.to_thread(resend.Emails.send, params)
             
             logger.info(f"Email sent successfully to {to_email}")
             return True

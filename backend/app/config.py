@@ -28,12 +28,9 @@ class Settings(BaseSettings):
     allowed_extensions: str = "jpg,jpeg,png,gif,webp"
     
     # Email Configuration
-    smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 587
-    smtp_user: str = ""
-    smtp_password: str = ""
-    smtp_from: str = "noreply@taskflow.com"
-    smtp_from_name: str = "TaskFlow"
+    resend_api_key: str = ""
+    email_from: str = "onboarding@resend.dev"
+    email_from_name: str = "TaskFlow"
     
     # Frontend Configuration
     frontend_url: str = "http://localhost:3000"
