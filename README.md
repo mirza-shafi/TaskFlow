@@ -91,9 +91,6 @@ TaskFlow/
 │   │   ├── pages/             # Application pages
 │   │   ├── lib/               # Utilities and API client
 │   │   └── App.tsx            # Main application entry
-│   ├── Dockerfile             # Multi-stage build (Node + Nginx Alpine)
-│   ├── .dockerignore          # Docker build exclusions
-│   ├── nginx.conf             # Optimized Nginx configuration
 │   └── package.json           # Frontend dependencies
 │
 ├── docker-compose.yml         # Production orchestration
@@ -262,19 +259,24 @@ docker-compose up -d
 
 ---
 
-### Traditional Deployment
+### ☁️ Cloud Deployment (Render & Vercel)
 
-**Backend (Render/Railway/AWS)**
-1. Set environment variables in your cloud provider.
-2. Use the start command: `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
+This application is configured for easy deployment on modern cloud platforms.
 
-**Frontend (Vercel/Netlify)**
-1. Build the project:
-   ```bash
-   cd client
-   npm run build
-   ```
-2. Deploy the `dist` folder.
+**Backend (Render Web Service)**
+1. Create a new "Web Service" on Render linked to this repository.
+2. Set Root Directory to `backend`.
+3. Set Environment to `Python 3`.
+4. Set Build Command: `pip install -r requirements.txt`.
+5. Set Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+6. Add all environment variables from your local `.env` (ensure `PYTHON_VERSION` is set to `3.12.0`).
+
+**Frontend (Vercel)**
+1. Create a new Project on Vercel linked to this repository.
+2. Set Root Directory to `client`.
+3. Framework Preset will automatically be detected as `Vite`.
+4. Add the Environment Variable: `VITE_API_BASE_URL` = `https://<YOUR-RENDER-URL>/api/v1`.
+5. Deploy! (Don't forget to add your Vercel URL to the `CORS_ORIGINS` in your Render backend settings).
 
 ---
 
