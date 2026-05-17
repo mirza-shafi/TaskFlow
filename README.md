@@ -2,6 +2,9 @@
 
 A modern, full-stack task management application with enterprise-grade authentication, real-time collaboration, and powerful habit tracking features.
 
+🌟 **Live Demo**: [https://task-flow.mirzashafi.com/](https://task-flow.mirzashafi.com/)
+🔗 **API Backend**: [https://taskflow-api.mirzashafi.com/](https://taskflow-api.mirzashafi.com/)
+
 ![TaskFlow](https://img.shields.io/badge/Status-Production%20Ready-success)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-009688?logo=fastapi)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
