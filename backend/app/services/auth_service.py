@@ -158,12 +158,7 @@ class AuthService:
             )
             raise UnauthorizedException("Invalid email or password")
         
-        # Check if email is verified
-        if not user.get("isEmailVerified", False):
-            raise UnauthorizedException(
-                "Please verify your email before logging in. "
-                "Check your inbox for the verification link."
-            )
+
         
         # Verify password
         if not verify_password(password, user.get("password", "")):
