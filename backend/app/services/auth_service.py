@@ -58,6 +58,15 @@ class AuthService:
         Raises:
             DuplicateException: If email already exists
         """
+        # Validate email format and deliverability
+        try:
+            from email_validator import validate_email, EmailNotValidError
+            # check_deliverability=True verifies that the domain has MX records (can receive mail)
+            valid = validate_email(email, check_deliverability=True)
+            email = valid.normalized
+        except EmailNotValidError as e:
+            raise ValidationException(str(e))
+
         # Check if user already exists
         existing_user = await self.users_collection.find_one({"email": email})
         if existing_user:
@@ -77,8 +86,8 @@ class AuthService:
             "avatarUrl": gravatar_url,  # Set Gravatar photo immediately
             "bio": "",
             "appearance": {},
-            "isEmailVerified": False,
-            "emailVerifiedAt": None,
+            "isEmailVerified": True, # Automatically verified
+            "emailVerifiedAt": datetime.utcnow(),
             "oauthProvider": "local",
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
@@ -87,12 +96,6 @@ class AuthService:
         # Insert user
         result = await self.users_collection.insert_one(user_doc)
         user_id = str(result.inserted_id)
-        
-        # Generate verification token
-        verification_token = token_manager.generate_verification_token(user_id, email)
-        
-        # Send verification email
-        await email_service.send_verification_email(email, name, verification_token)
         
         # Log security event
         ip_address = get_client_ip(request)
@@ -106,7 +109,7 @@ class AuthService:
         )
         
         return {
-            "message": "Registration successful! Please check your email to verify your account.",
+            "message": "Registration successful! You can now log in.",
             "email": email
         }
     
