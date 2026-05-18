@@ -82,10 +82,16 @@ A modern, full-stack task management application with enterprise-grade authentic
 TaskFlow/
 ├── backend/                    # FastAPI backend
 │   ├── app/
-│   │   ├── api/v1/            # API endpoints (auth, users, tasks, habits, etc.)
-│   │   ├── core/              # Security and config
+│   │   ├── api/v1/            # API endpoints (auth, users, tasks, habits, teams, notes, etc.)
+│   │   ├── core/              # Security, JWT, and config
+│   │   ├── models/            # Database models / entities
+│   │   ├── schemas/           # Pydantic data validation models
 │   │   ├── services/          # Business logic layer
-│   │   └── schemas/           # Pydantic data models
+│   │   ├── middleware/        # Request/response middleware
+│   │   ├── utils/             # Helper functions and utilities
+│   │   ├── templates/         # Email HTML templates
+│   │   ├── database.py        # MongoDB connection setup
+│   │   └── main.py            # FastAPI application entry point
 │   ├── Dockerfile             # Optimized production image (Alpine)
 │   ├── Dockerfile.dev         # Development image with hot reload
 │   ├── .dockerignore          # Docker build exclusions
@@ -95,9 +101,13 @@ TaskFlow/
 ├── client/                     # React frontend (Vite)
 │   ├── src/
 │   │   ├── components/        # Reusable UI components
-│   │   ├── pages/             # Application pages
-│   │   ├── lib/               # Utilities and API client
-│   │   └── App.tsx            # Main application entry
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── lib/               # Utilities, configurations, and API client hooks
+│   │   ├── pages/             # Application pages (Auth, Dashboard, Teams, etc.)
+│   │   ├── providers/         # React Context providers (Auth, Theme, etc.)
+│   │   ├── types/             # TypeScript type definitions
+│   │   ├── App.tsx            # Main application entry
+│   │   └── main.tsx           # React DOM rendering entry
 │   └── package.json           # Frontend dependencies
 │
 ├── docker-compose.yml         # Production orchestration
@@ -113,7 +123,8 @@ TaskFlow/
 │
 ├── README.md                  # This file
 ├── DOCKER_README.md           # Comprehensive Docker guide
-└── DOCKER_OPTIMIZATION.md     # Optimization details & benchmarks
+├── DOCKER_OPTIMIZATION.md     # Optimization details & benchmarks
+└── DOCKER_BUILD_FIX.md        # Build troubleshooting guide
 ```
 
 ---
@@ -210,23 +221,56 @@ docker-compose up -d
 
 ## 📚 API Endpoints
 
-### Authentication
-- `POST /api/v1/auth/register` - Create account (Instant, no email verification needed)
-- `POST /api/v1/auth/login` - Get access/refresh tokens
-- `POST /api/v1/auth/refresh` - Refresh access token
-- `POST /api/v1/auth/logout` - Revoke current session
+### Authentication (`/api/v1/auth`)
+- `POST /register` - Create account
+- `POST /login` - Get access/refresh tokens
+- `POST /google` - Authenticate via Firebase Google Auth
+- `POST /refresh` - Refresh access token
+- `POST /logout` - Revoke current session
+- `POST /forgot-password` - Request password reset email
+- `POST /reset-password` - Reset password using token
 
-### Tasks
-- `GET /api/v1/tasks` - List tasks
-- `POST /api/v1/tasks` - Create task
-- `PUT /api/v1/tasks/{id}` - Update task
-- `DELETE /api/v1/tasks/{id}` - Soft delete task
+### Tasks (`/api/v1/tasks`)
+- `GET /` - List tasks
+- `POST /` - Create task
+- `PUT /{id}` - Update task
+- `DELETE /{id}` - Soft delete task
+- `POST /{id}/restore` - Restore deleted task
+- `DELETE /{id}/permanent` - Permanently delete task
 
-### Habits
-- `GET /api/v1/habits` - List active habits
-- `POST /api/v1/habits` - Create habit
-- `POST /api/v1/habits/{id}/log` - Mark habit as completed
-- `GET /api/v1/habits/heatmap` - Get activity heatmap data
+### Teams (`/api/v1/teams`)
+- `GET /` - List user's teams
+- `POST /` - Create a team workspace
+- `GET /{id}` - Get team details
+- `PUT /{id}` - Update team settings
+- `DELETE /{id}` - Delete team
+- `POST /{id}/invite` - Invite member to team via email
+- `PATCH /{id}/members/{member_id}` - Update member role
+- `DELETE /{id}/members/{member_id}` - Remove member
+- `GET /{id}/activity` - Get team activity history
+
+### Notes (`/api/v1/notes`)
+- `GET /` - List all notes
+- `POST /` - Create note
+- `GET /{id}` - Get note details
+- `PUT /{id}` - Update note
+- `DELETE /{id}` - Soft delete note
+- `POST /{id}/pin` - Toggle note pin status
+- `POST /{id}/favorite` - Toggle note favorite status
+
+### Habits (`/api/v1/habits`)
+- `GET /` - List active habits
+- `POST /` - Create habit
+- `PUT /{id}` - Update habit
+- `DELETE /{id}` - Delete habit
+- `POST /{id}/log` - Mark habit as completed
+- `GET /heatmap` - Get activity heatmap data
+
+### Other Modules
+- **Folders** (`/api/v1/folders`): Create, update, list, and delete folders for organization.
+- **Analytics** (`/api/v1/analytics`): Get productivity stats, task completion rates, and habit insights.
+- **Notifications** (`/api/v1/notifications`): Get, mark as read, and delete user notifications.
+- **Users** (`/api/v1/users`): Get current user profile, update settings, manage sessions.
 
 *(Full list of 80+ endpoints available in Swagger UI at `/docs`)*
 
