@@ -352,8 +352,8 @@ This application is configured for easy deployment on modern cloud platforms.
 ## 👨‍💻 Author
 
 **Mirza Shafi**
-- GitHub: [@mirza-shafi](https://github.com/mirzashafi)
-- Email: mirza.md.shafi.uddin@gmail.com
+- **GitHub:** [mirza-shafi](https://github.com/mirza-shafi)
+- **Email:** [mirza.md.shafi.uddin@gmail.com](mailto:mirza.md.shafi.uddin@gmail.com)
 
 ---
 
