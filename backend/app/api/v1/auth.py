@@ -10,7 +10,8 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     RefreshTokenRequest,
     TokenResponse,
-    SessionInfo
+    SessionInfo,
+    GoogleAuthRequest,
 )
 from app.schemas.common import MessageResponse
 from app.core.dependencies import get_current_user, security
@@ -40,7 +41,8 @@ async def register(
         name=user_data.name,
         email=user_data.email,
         password=user_data.password,
-        request=request
+        request=request,
+        invite_token=user_data.inviteToken or ""
     )
     return result
 
@@ -66,6 +68,28 @@ async def login(
         request=request
     )
     return result
+
+
+@router.post("/google", response_model=TokenResponse)
+async def google_login(
+    payload: GoogleAuthRequest,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(get_database),
+):
+    """
+    Sign in (or register) with Google via Firebase.
+
+    - **idToken**: Firebase ID token from `signInWithPopup(GoogleAuthProvider)`
+
+    Verifies the token server-side, then finds or creates a user account
+    and returns TaskFlow JWT tokens — identical to a regular login response.
+    New users are automatically registered; existing users are simply logged in.
+    """
+    auth_service = AuthService(db)
+    return await auth_service.google_oauth_login(
+        id_token=payload.idToken,
+        request=request,
+    )
 
 
 @router.post("/refresh", response_model=dict)

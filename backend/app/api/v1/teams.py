@@ -23,17 +23,32 @@ async def get_teams(
 ):
     """Get all teams where user is owner or member."""
     team_service = TeamService(db)
-    
     try:
         teams = await team_service.get_teams(str(current_user["_id"]))
-        
-        # Convert ObjectIds to strings
         for team in teams:
             team["_id"] = str(team["_id"])
-        
         return teams
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/{team_id}", response_model=TeamResponse)
+async def get_team(
+    team_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """Get a single team by ID (user must be a member)."""
+    team_service = TeamService(db)
+    try:
+        team = await team_service.get_team_by_id(team_id, str(current_user["_id"]))
+        team["_id"] = str(team["_id"])
+        return team
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 
 
 @router.post("", response_model=TeamResponse, status_code=status.HTTP_201_CREATED)

@@ -20,30 +20,25 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 @router.get("", response_model=TaskList)
 async def get_tasks(
     folder_id: Optional[str] = Query(None, description="Filter by folder ID"),
-    status: Optional[str] = Query(None, description="Filter by status"),
+    team_id:   Optional[str] = Query(None, description="Filter by team ID"),
+    status:    Optional[str] = Query(None, description="Filter by status"),
     current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """
     Get all tasks for the current user.
-    
-    Optional filters:
-    - **folder_id**: Filter by folder
-    - **status**: Filter by status (todo, doing, done)
+    Optional filters: folder_id, team_id, status
     """
     task_service = TaskService(db)
-    
     try:
         tasks = await task_service.get_tasks(
             user_id=str(current_user["_id"]),
             folder_id=folder_id,
+            team_id=team_id,
             status=status
         )
-        
-        # Convert ObjectIds to strings
         for task in tasks:
             task["_id"] = str(task["_id"])
-        
         return {"tasks": tasks, "total": len(tasks)}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

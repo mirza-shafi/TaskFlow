@@ -28,6 +28,9 @@ env/
 backend/.env
 backend/venv/
 backend/__pycache__/
+# Firebase service account (contains private key — NEVER commit)
+firebase-service-account.json
+backend/firebase-service-account.json
 
 # Frontend specific
 client/node_modules/

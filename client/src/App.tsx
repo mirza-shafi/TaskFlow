@@ -17,6 +17,7 @@ import TasksPage from "@/pages/TasksPage";
 import NotesPage from "@/pages/NotesPage";
 import HabitsPage from "@/pages/HabitsPage";
 import TeamsPage from "@/pages/TeamsPage";
+import TeamWorkspacePage from "@/pages/TeamWorkspacePage";
 import TrashPage from "@/pages/TrashPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,8 @@ const App = () => (
                 <Route path="notes" element={<NotesPage />} />
                 <Route path="habits" element={<HabitsPage />} />
                 <Route path="teams" element={<TeamsPage />} />
+                <Route path="teams/:teamId" element={<TeamWorkspacePage />} />
+
                 <Route path="trash" element={<TrashPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>

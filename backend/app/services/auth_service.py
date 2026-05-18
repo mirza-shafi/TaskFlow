@@ -11,6 +11,7 @@ from app.core.security import (
     create_refresh_token,
     decode_refresh_token
 )
+from app.core.firebase import verify_firebase_token
 from app.services.email_service import email_service
 from app.services.session_service import SessionService
 from app.services.security_service import SecurityService, TokenBlacklistService
@@ -41,27 +42,16 @@ class AuthService:
         name: str,
         email: str,
         password: str,
-        request: Request
+        request: Request,
+        invite_token: str = ""
     ) -> Dict[str, Any]:
         """
-        Register a new user with email verification.
-        
-        Args:
-            name: User's name
-            email: User's email
-            password: User's password (will be hashed)
-            request: FastAPI request object
-        
-        Returns:
-            Success message (user must verify email before login)
-        
-        Raises:
-            DuplicateException: If email already exists
+        Register a new user.  If invite_token is provided (or a pending invite
+        exists for this email), the user is automatically added to the team.
         """
         # Validate email format and deliverability
         try:
             from email_validator import validate_email, EmailNotValidError
-            # check_deliverability=True verifies that the domain has MX records (can receive mail)
             valid = validate_email(email, check_deliverability=True)
             email = valid.normalized
         except EmailNotValidError as e:
@@ -71,32 +61,59 @@ class AuthService:
         existing_user = await self.users_collection.find_one({"email": email})
         if existing_user:
             raise DuplicateException("Email already registered")
-        
+
         # Hash password
         hashed_password = hash_password(password)
-        
+
         # Generate Gravatar URL
         gravatar_url = GravatarService.get_profile_photo_url(email)
-        
+
         # Create user document
         user_doc = {
             "name": name,
             "email": email,
             "password": hashed_password,
-            "avatarUrl": gravatar_url,  # Set Gravatar photo immediately
+            "avatarUrl": gravatar_url,
             "bio": "",
             "appearance": {},
-            "isEmailVerified": True, # Automatically verified
+            "isEmailVerified": True,
             "emailVerifiedAt": datetime.utcnow(),
             "oauthProvider": "local",
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
         }
-        
-        # Insert user
+
         result = await self.users_collection.insert_one(user_doc)
         user_id = str(result.inserted_id)
-        
+
+        # ── Accept pending team invitations ─────────────────────────────────
+        invite_query = {"email": email, "accepted": False}
+        if invite_token:
+            invite_query["token"] = invite_token
+
+        pending_invites = await self.db.team_invites.find(invite_query).to_list(length=None)
+        for invite in pending_invites:
+            team_id = invite["teamId"]
+            role    = invite.get("role", "member")
+            # Add user to team
+            await self.db.teams.update_one(
+                {"_id": ObjectId(team_id)},
+                {
+                    "$push": {"members": {
+                        "userId":   user_id,
+                        "role":     role,
+                        "joinedAt": datetime.utcnow(),
+                    }},
+                    "$set": {"updatedAt": datetime.utcnow()},
+                }
+            )
+            # Mark invite as accepted
+            await self.db.team_invites.update_one(
+                {"_id": invite["_id"]},
+                {"$set": {"accepted": True, "acceptedAt": datetime.utcnow()}}
+            )
+        # ────────────────────────────────────────────────────────────────────
+
         # Log security event
         ip_address = get_client_ip(request)
         device_info = DeviceParser.parse_user_agent(request.headers.get("user-agent", ""))
@@ -107,12 +124,14 @@ class AuthService:
             device_info=device_info,
             success=True
         )
-        
-        return {
-            "message": "Registration successful! You can now log in.",
-            "email": email
-        }
-    
+
+        joined_teams = len(pending_invites)
+        msg = "Registration successful! You can now log in."
+        if joined_teams:
+            msg += f" You've been added to {joined_teams} team(s)."
+
+        return {"message": msg, "email": email}
+
     async def login_user(
         self,
         email: str,
@@ -428,4 +447,132 @@ class AuthService:
         return {
             "message": f"Logged out from all devices successfully",
             "sessionsRevoked": count
+        }
+
+    async def google_oauth_login(
+        self,
+        id_token: str,
+        request: Request
+    ) -> Dict[str, Any]:
+        """
+        Authenticate or register a user via Google OAuth (Firebase).
+
+        Flow:
+        1. Verify the Firebase ID token server-side.
+        2. Find an existing user by email, or create a new one (no password).
+        3. Issue TaskFlow JWT access + refresh tokens.
+        4. Create a session entry identical to a normal login.
+
+        Args:
+            id_token: Firebase ID token obtained by the frontend after
+                      `signInWithPopup(GoogleProvider)`.
+            request: FastAPI request object (used for device/IP info).
+
+        Returns:
+            Dict with accessToken, refreshToken, tokenType, expiresIn, user.
+
+        Raises:
+            UnauthorizedException: If the Firebase token is invalid or expired.
+            ValidationException: If the Google account has no email address.
+        """
+        ip_address = get_client_ip(request)
+        device_info = DeviceParser.parse_user_agent(
+            request.headers.get("user-agent", "")
+        )
+
+        # Step 1 — Verify the Firebase ID token
+        try:
+            google_user = await verify_firebase_token(id_token)
+        except ValueError as e:
+            raise UnauthorizedException(f"Google authentication failed: {str(e)}")
+
+        email = google_user.get("email")
+        if not email:
+            raise ValidationException(
+                "Google account does not have an email address. "
+                "Please use an account with a verified email."
+            )
+
+        name = google_user.get("name") or email.split("@")[0]
+        picture = google_user.get("picture", "")
+        google_uid = google_user.get("uid")
+
+        # Step 2 — Find existing user or create a new one
+        user = await self.users_collection.find_one({"email": email})
+
+        if not user:
+            # Brand-new user — create account without a password
+            user_doc = {
+                "name": name,
+                "email": email,
+                "password": None,           # OAuth users have no local password
+                "avatarUrl": picture,
+                "bio": "",
+                "appearance": {},
+                "isEmailVerified": True,    # Google emails are always verified
+                "emailVerifiedAt": datetime.utcnow(),
+                "oauthProvider": "google",
+                "oauthUid": google_uid,
+                "createdAt": datetime.utcnow(),
+                "updatedAt": datetime.utcnow(),
+            }
+            result = await self.users_collection.insert_one(user_doc)
+            user = await self.users_collection.find_one({"_id": result.inserted_id})
+
+            await self.security_service.log_security_event(
+                user_id=str(user["_id"]),
+                event="google_registration",
+                ip_address=ip_address,
+                device_info=device_info,
+                success=True,
+            )
+        else:
+            # Existing user — link Google UID / update avatar if missing
+            update_fields: Dict[str, Any] = {"updatedAt": datetime.utcnow()}
+            if not user.get("oauthUid"):
+                update_fields["oauthUid"] = google_uid
+                update_fields["oauthProvider"] = "google"
+            if not user.get("avatarUrl") and picture:
+                update_fields["avatarUrl"] = picture
+            if len(update_fields) > 1:  # More than just updatedAt
+                await self.users_collection.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": update_fields}
+                )
+
+        user_id = str(user["_id"])
+
+        # Step 3 — Issue TaskFlow JWT tokens
+        token_data = {"id": user_id, "email": email}
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+
+        # Step 4 — Create a session (same as normal login)
+        session = await self.session_service.create_session(
+            user_id=user_id,
+            refresh_token=refresh_token,
+            device_info=device_info,
+            ip_address=ip_address,
+        )
+
+        await self.security_service.log_security_event(
+            user_id=user_id,
+            event="google_login",
+            ip_address=ip_address,
+            device_info=device_info,
+            success=True,
+            metadata={"sessionId": str(session.get("_id"))},
+        )
+
+        # Build response — strip sensitive fields
+        user_data = dict(user)
+        user_data.pop("password", None)
+        user_data["_id"] = str(user_data["_id"])
+
+        return {
+            "accessToken": access_token,
+            "refreshToken": refresh_token,
+            "tokenType": "Bearer",
+            "expiresIn": settings.access_token_expire_minutes * 60,
+            "user": user_data,
         }

@@ -1,4 +1,6 @@
 import apiClient from './config';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 import {
   LoginCredentials,
   RegisterCredentials,
@@ -35,6 +37,40 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
     localStorage.setItem('user', JSON.stringify(response.data.user));
   }
   
+  return response.data;
+};
+
+/**
+ * Sign in (or register) with Google via Firebase.
+ *
+ * Opens a Google account-picker popup. On success:
+ * 1. Gets a short-lived Firebase ID token.
+ * 2. Sends it to POST /auth/google on the TaskFlow backend.
+ * 3. Backend verifies it, finds-or-creates the user, returns our own JWTs.
+ * 4. Stores tokens identically to a normal login.
+ *
+ * Errors:
+ * - `auth/popup-closed-by-user` — user dismissed the popup (handle silently).
+ * - `auth/popup-blocked`        — browser blocked the popup (show a message).
+ * - HTTP errors from backend    — invalid token, server error, etc.
+ */
+export const loginWithGoogle = async (): Promise<AuthResponse> => {
+  // Step 1: Open Google account picker
+  const result = await signInWithPopup(auth, googleProvider);
+
+  // Step 2: Get Firebase ID token (short-lived, ~1 hour)
+  const idToken = await result.user.getIdToken();
+
+  // Step 3: Exchange with our backend for TaskFlow JWTs
+  const response = await apiClient.post<AuthResponse>('/auth/google', { idToken });
+
+  // Step 4: Persist tokens (same pattern as regular login)
+  if (response.data.accessToken) {
+    localStorage.setItem('accessToken', response.data.accessToken);
+    localStorage.setItem('refreshToken', response.data.refreshToken);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+  }
+
   return response.data;
 };
 

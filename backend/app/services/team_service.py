@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.utils.exceptions import NotFoundException, ValidationException
 
@@ -16,15 +16,76 @@ class TeamService:
         self.activities_collection = db.activities
     
     async def get_teams(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all teams where user is owner or member."""
+        """Get all teams where user is owner or member, with enriched member info."""
         teams = await self.teams_collection.find({
             "$or": [
                 {"ownerId": user_id},
                 {"members.userId": user_id}
             ]
         }).to_list(length=None)
-        
+
+        # Collect all unique userIds across all teams (members + owners)
+        all_user_ids = set()
+        for team in teams:
+            all_user_ids.add(team["ownerId"])
+            for m in team.get("members", []):
+                all_user_ids.add(m["userId"])
+
+        # Batch-fetch user info
+        user_docs = await self.users_collection.find(
+            {"_id": {"$in": [ObjectId(uid) for uid in all_user_ids if ObjectId.is_valid(uid)]}}
+        ).to_list(length=None)
+        user_map = {str(u["_id"]): u for u in user_docs}
+
+        # Enrich each team's members list with email + name
+        for team in teams:
+            enriched = []
+            for m in team.get("members", []):
+                uid = m["userId"]
+                u = user_map.get(uid, {})
+                enriched.append({
+                    "userId":   uid,
+                    "email":    u.get("email", ""),
+                    "name":     u.get("name", ""),
+                    "avatarUrl": u.get("avatarUrl", ""),
+                    "role":     m.get("role", "member"),
+                    "joinedAt": m.get("joinedAt", team.get("createdAt")),
+                })
+            team["members"] = enriched
+
         return teams
+
+    async def get_team_by_id(self, team_id: str, user_id: str) -> Dict[str, Any]:
+        """Get a single team by ID. User must be owner or member."""
+        if not ObjectId.is_valid(team_id):
+            raise ValidationException("Invalid team ID format")
+
+        team = await self.teams_collection.find_one({
+            "_id": ObjectId(team_id),
+            "$or": [{"ownerId": user_id}, {"members.userId": user_id}]
+        })
+        if not team:
+            raise NotFoundException("Team not found or you don't have access")
+
+        # Enrich members
+        all_user_ids = {team["ownerId"]} | {m["userId"] for m in team.get("members", [])}
+        user_docs = await self.users_collection.find(
+            {"_id": {"$in": [ObjectId(uid) for uid in all_user_ids if ObjectId.is_valid(uid)]}}
+        ).to_list(length=None)
+        user_map = {str(u["_id"]): u for u in user_docs}
+
+        team["members"] = [
+            {
+                "userId":    m["userId"],
+                "email":     user_map.get(m["userId"], {}).get("email", ""),
+                "name":      user_map.get(m["userId"], {}).get("name", ""),
+                "avatarUrl": user_map.get(m["userId"], {}).get("avatarUrl", ""),
+                "role":      m.get("role", "member"),
+                "joinedAt":  m.get("joinedAt", team.get("createdAt")),
+            }
+            for m in team.get("members", [])
+        ]
+        return team
     
     async def create_team(self, user_id: str, team_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new team."""
@@ -151,84 +212,108 @@ class TeamService:
     ) -> Dict[str, Any]:
         """
         Invite a user to a team by email.
-        
-        Args:
-            team_id: Team's ObjectId as string
-            user_id: User's ID (for authorization, must be owner or admin)
-            invite_email: Email of user to invite
-            role: Role to assign (default: "member")
-        
-        Returns:
-            Updated team document
-        
-        Raises:
-            NotFoundException: If team or invited user not found
-            ValidationException: If user already in team or lacks permission
+        - If user exists → add immediately.
+        - If user doesn't exist → store pending invite + send email with signup link.
         """
+        from app.services.email_service import email_service
+        from app.config import settings
+        import secrets
+
         if not ObjectId.is_valid(team_id):
             raise ValidationException("Invalid team ID format")
-        
-        # Check if team exists and user has permission to invite
+
         team = await self.teams_collection.find_one({"_id": ObjectId(team_id)})
-        
         if not team:
             raise NotFoundException("Team not found")
-        
-        # Check if user is owner or admin
+
+        # Permission check
         is_owner = team["ownerId"] == user_id
         is_admin = any(
             m["userId"] == user_id and m.get("role") == "admin"
             for m in team.get("members", [])
         )
-        
         if not (is_owner or is_admin):
             raise ValidationException("Only team owners and admins can invite members")
-        
-        # Find user to invite by email
+
+        # Get inviter info
+        inviter = await self.users_collection.find_one({"_id": ObjectId(user_id)})
+        inviter_name = inviter.get("name", "A teammate") if inviter else "A teammate"
+
+        # Check if user already exists in the system
         invited_user = await self.users_collection.find_one({"email": invite_email})
-        
-        if not invited_user:
-            raise NotFoundException(f"User with email {invite_email} not found")
-        
-        invited_user_id = str(invited_user["_id"])
-        
-        # Check if user is already owner
-        if team["ownerId"] == invited_user_id:
-            raise ValidationException("User is already the team owner")
-        
-        # Check if user is already a member
-        if any(m["userId"] == invited_user_id for m in team.get("members", [])):
-            raise ValidationException("User is already a member of this team")
-        
-        # Add member to team
-        new_member = {
-            "userId": invited_user_id,
-            "role": role,
-            "joinedAt": datetime.utcnow()
-        }
-        
-        await self.teams_collection.update_one(
-            {"_id": ObjectId(team_id)},
-            {
-                "$push": {"members": new_member},
-                "$set": {"updatedAt": datetime.utcnow()}
+
+        if invited_user:
+            # ── User already registered → add directly ──────────────────────
+            invited_user_id = str(invited_user["_id"])
+
+            if team["ownerId"] == invited_user_id:
+                raise ValidationException("User is already the team owner")
+            if any(m["userId"] == invited_user_id for m in team.get("members", [])):
+                raise ValidationException("User is already a member of this team")
+
+            new_member = {
+                "userId": invited_user_id,
+                "role": role,
+                "joinedAt": datetime.utcnow(),
             }
-        )
-        
-        # Log activity
-        await self._log_activity(
-            team_id=team_id,
-            user_id=user_id,
-            activity_type="member_added",
-            resource_type="member",
-            resource_id=invited_user_id,
-            description=f"{invited_user.get('name', 'User')} was added to the team"
-        )
-        
-        # Return updated team
+            await self.teams_collection.update_one(
+                {"_id": ObjectId(team_id)},
+                {
+                    "$push": {"members": new_member},
+                    "$set":  {"updatedAt": datetime.utcnow()},
+                }
+            )
+            await self._log_activity(
+                team_id=team_id, user_id=user_id,
+                activity_type="member_added", resource_type="member",
+                resource_id=invited_user_id,
+                description=f"{invited_user.get('name', invite_email)} was added to the team",
+            )
+
+        else:
+            # ── User not registered → store pending invite + send email ──────
+            # Check for existing pending invite
+            existing = await self.db.team_invites.find_one({
+                "teamId": team_id,
+                "email": invite_email,
+                "accepted": False,
+            })
+            if existing:
+                raise ValidationException(
+                    f"A pending invitation has already been sent to {invite_email}"
+                )
+
+            token = secrets.token_urlsafe(32)
+            invite_doc = {
+                "teamId": team_id,
+                "email": invite_email,
+                "role": role,
+                "invitedBy": user_id,
+                "token": token,
+                "accepted": False,
+                "createdAt": datetime.utcnow(),
+                "expiresAt": datetime.utcnow() + timedelta(days=7),
+            }
+            await self.db.team_invites.insert_one(invite_doc)
+
+            # Invite URL → register page with token pre-filled
+            invite_url = (
+                f"{settings.frontend_url}/register"
+                f"?invite={token}&email={invite_email}"
+            )
+
+            await email_service.send_team_invite_email(
+                to_email=invite_email,
+                inviter_name=inviter_name,
+                team_name=team["name"],
+                role=role,
+                invite_url=invite_url,
+            )
+
         updated_team = await self.teams_collection.find_one({"_id": ObjectId(team_id)})
         return updated_team
-    
+
+
     async def update_member_role(
         self,
         team_id: str,

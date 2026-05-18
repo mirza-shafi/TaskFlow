@@ -1,5 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
+import os
+
+# Absolute path to the directory containing this config file (i.e. backend/app/)
+_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+# One level up = backend/
+_BACKEND_DIR = os.path.dirname(_APP_DIR)
 
 
 class Settings(BaseSettings):
@@ -41,6 +47,9 @@ class Settings(BaseSettings):
     max_devices_per_user: int = 5
     verification_token_expire_hours: int = 24
     reset_token_expire_hours: int = 1
+
+    # Firebase / Google OAuth Configuration
+    firebase_service_account_path: str = os.path.join(_BACKEND_DIR, "firebase-service-account.json")
     
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -17,7 +17,8 @@ export interface NotificationPreferences {
 }
 
 export interface User {
-  _id: string;
+  _id: string;  // may be present from raw MongoDB or localStorage
+  id?: string;  // serialised by backend UserResponse (alias of _id)
   name: string;
   email: string;
   avatarUrl?: string;
@@ -346,6 +347,8 @@ export interface Team {
 export interface TeamMember {
   userId: string;
   email: string;
+  name?: string;
+  avatarUrl?: string;
   role: 'owner' | 'admin' | 'member';
   joinedAt: string;
 }

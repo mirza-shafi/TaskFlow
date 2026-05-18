@@ -49,23 +49,23 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <CommandEmpty>No results found.</CommandEmpty>
           
           <CommandGroup heading="Navigation">
-            <CommandItem onSelect={() => runCommand(() => navigate('/dashboard'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/dashboard'))}>
               <BarChart3 className="mr-2 h-4 w-4" />
               Dashboard
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/tasks'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/tasks'))}>
               <CheckSquare className="mr-2 h-4 w-4" />
               Tasks
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/notes'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/notes'))}>
               <StickyNote className="mr-2 h-4 w-4" />
               Notes
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/habits'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/habits'))}>
               <Target className="mr-2 h-4 w-4" />
               Habits
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/teams'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/teams'))}>
               <Users className="mr-2 h-4 w-4" />
               Teams
             </CommandItem>
@@ -74,15 +74,15 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <CommandSeparator />
 
           <CommandGroup heading="Actions">
-            <CommandItem onSelect={() => runCommand(() => navigate('/tasks/new'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/tasks'))}>
               <Plus className="mr-2 h-4 w-4" />
               Create New Task
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/notes/new'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/notes'))}>
               <Plus className="mr-2 h-4 w-4" />
               Create New Note
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/trash'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/trash'))}>
               <Trash2 className="mr-2 h-4 w-4" />
               View Trash
             </CommandItem>
@@ -99,7 +99,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               )}
               Toggle Theme
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => navigate('/settings'))}>
+            <CommandItem onSelect={() => runCommand(() => navigate('/app/settings'))}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </CommandItem>

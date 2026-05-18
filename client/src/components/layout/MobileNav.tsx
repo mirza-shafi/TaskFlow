@@ -4,8 +4,9 @@ import {
   LayoutDashboard,
   CheckSquare,
   StickyNote,
+  Users,
   Target,
-  Search,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,10 +15,12 @@ interface MobileNavProps {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/app/dashboard' },
-  { icon: CheckSquare, label: 'Tasks', path: '/app/tasks' },
-  { icon: StickyNote, label: 'Notes', path: '/app/notes' },
-  { icon: Target, label: 'Habits', path: '/app/habits' },
+  { icon: LayoutDashboard, label: 'Home',     path: '/app/dashboard' },
+  { icon: CheckSquare,     label: 'Tasks',    path: '/app/tasks'     },
+  { icon: StickyNote,      label: 'Notes',    path: '/app/notes'     },
+  { icon: Target,          label: 'Habits',   path: '/app/habits'    },
+  { icon: Users,           label: 'Teams',    path: '/app/teams'     },
+  { icon: Settings,        label: 'Settings', path: '/app/settings'  },
 ];
 
 export function MobileNav({ onOpenSearch }: MobileNavProps) {
@@ -55,14 +58,6 @@ export function MobileNav({ onOpenSearch }: MobileNavProps) {
           )}
         </NavLink>
       ))}
-      
-      <button
-        onClick={onOpenSearch}
-        className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <Search className="h-5 w-5" />
-        <span className="text-2xs font-medium">Search</span>
-      </button>
     </nav>
   );
 }

@@ -2,6 +2,13 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 
+class GoogleAuthRequest(BaseModel):
+    """Request body for Google OAuth login via Firebase."""
+    idToken: str = Field(
+        ...,
+        description="Firebase ID token obtained from signInWithPopup on the frontend."
+    )
+
 
 class ForgotPasswordRequest(BaseModel):
     """Request to initiate password reset."""

@@ -20,6 +20,22 @@ export const getTeams = async (): Promise<Team[]> => {
   return response.data;
 };
 
+export const getTeam = async (teamId: string): Promise<Team> => {
+  const response = await apiClient.get<Team>(`/teams/${teamId}`);
+  return response.data;
+};
+
+export const getTeamTasks = async (teamId: string) => {
+  const response = await apiClient.get('/tasks', { params: { team_id: teamId } });
+  return response.data.tasks ?? [];
+};
+
+export const getTeamNotes = async (teamId: string) => {
+  const response = await apiClient.get('/notes', { params: { team_id: teamId } });
+  return response.data.notes ?? response.data ?? [];
+};
+
+
 /**
  * Create a new team
  */
@@ -71,9 +87,7 @@ export const updateMemberRole = async (
   memberId: string,
   role: 'member' | 'admin'
 ): Promise<Team> => {
-  const response = await apiClient.put<Team>(`/teams/${teamId}/members/${memberId}/role`, {
-    role,
-  });
+  const response = await apiClient.patch<Team>(`/teams/${teamId}/members/${memberId}`, { role });
   return response.data;
 };
 

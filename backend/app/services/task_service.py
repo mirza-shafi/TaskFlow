@@ -20,39 +20,29 @@ class TaskService:
         user_id: str,
         include_deleted: bool = False,
         folder_id: Optional[str] = None,
+        team_id: Optional[str] = None,
         status: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        """
-        Get all tasks for a user (owned or shared with them).
-        
-        Args:
-            user_id: User's ID
-            include_deleted: Whether to include soft-deleted tasks
-            folder_id: Filter by folder ID (optional)
-            status: Filter by status (optional)
-        
-        Returns:
-            List of task documents
-        """
-        query = {
+        """Get tasks for a user, optionally filtered by folder, team, or status."""
+        query: dict = {
             "$or": [
-                {"userId": user_id},  # Tasks owned by user
-                {"collaborators.userId": user_id}  # Tasks shared with user
+                {"userId": user_id},
+                {"collaborators.userId": user_id},
             ]
         }
-        
         if not include_deleted:
             query["isDeleted"] = {"$ne": True}
-        
         if folder_id:
             query["folderId"] = folder_id
-        
+        if team_id:
+            # Return tasks belonging to this team (visible to any team member)
+            query = {"teamId": team_id, "isDeleted": {"$ne": True}}
         if status:
             query["status"] = status
-        
+
         tasks = await self.tasks_collection.find(query).to_list(length=None)
         return tasks
-    
+
     async def get_task_by_id(self, task_id: str, user_id: str) -> Dict[str, Any]:
         """
         Get a single task by ID with permission check.

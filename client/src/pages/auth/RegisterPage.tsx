@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/providers/AuthProvider';
 import { toast } from 'sonner';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -24,10 +25,15 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { register: registerUser } = useAuth();
-  const navigate = useNavigate();
+  const [showPassword, setShowPassword]   = useState(false);
+  const [isLoading, setIsLoading]         = useState(false);
+  const { register: registerUser }        = useAuth();
+  const navigate                          = useNavigate();
+  const [searchParams]                    = useSearchParams();
+
+  // Pre-fill from invite link: /register?invite=TOKEN&email=EMAIL
+  const inviteToken = searchParams.get('invite') ?? '';
+  const inviteEmail = searchParams.get('email') ?? '';
 
   const {
     register,
@@ -36,6 +42,7 @@ export default function RegisterPage() {
     watch,
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { email: inviteEmail },
   });
 
   const password = watch('password', '');
@@ -53,8 +60,11 @@ export default function RegisterPage() {
         email: data.email,
         password: data.password,
         name: data.name,
-      });
-      toast.success('Account created! Please verify your email to login.');
+        inviteToken: inviteToken || undefined,
+      } as any);
+      toast.success(inviteToken
+        ? 'Account created! You have been added to the team. Please log in.'
+        : 'Account created! You can now log in.');
       navigate('/login');
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -135,6 +145,17 @@ export default function RegisterPage() {
           </div>
 
           {/* Form */}
+          <GoogleSignInButton className="mb-2" />
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or register with email</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">

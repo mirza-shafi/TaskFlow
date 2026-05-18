@@ -51,6 +51,7 @@ import * as tasksApi from '@/lib/api/tasks';
 import * as notesApi from '@/lib/api/notes';
 import * as habitsApi from '@/lib/api/habits';
 import { toast } from 'sonner';
+import { QuickAddModal } from '@/components/dashboard/QuickAddModal';
 import type { AnalyticsSummary, SocialFeedItem, Task, Note, Habit, StreakInfo } from '@/types/api';
 
 const container = {
@@ -101,8 +102,9 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]    = useState(true);
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('week');
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -496,7 +498,11 @@ export default function DashboardPage() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button className="bg-gradient-primary hover:opacity-90">
+            <Button
+              id="dashboard-quick-add-btn"
+              className="bg-gradient-primary hover:opacity-90"
+              onClick={() => setQuickAddOpen(true)}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Quick Add
             </Button>
@@ -909,6 +915,13 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
       </motion.div>
+
+      {/* Quick Add Modal */}
+      <QuickAddModal
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        onCreated={loadDashboardData}
+      />
     </div>
   );
 }

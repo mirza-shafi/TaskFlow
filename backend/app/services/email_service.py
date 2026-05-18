@@ -317,5 +317,80 @@ class EmailService:
         )
 
 
+    async def send_team_invite_email(
+        self,
+        to_email: str,
+        inviter_name: str,
+        team_name: str,
+        role: str,
+        invite_url: str,
+    ) -> bool:
+        """Send a team invitation email to someone who may not have an account yet."""
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; }}
+                .header h1 {{ margin: 0; font-size: 28px; }}
+                .header p {{ margin: 8px 0 0; opacity: 0.85; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 12px 12px; }}
+                .team-badge {{ display: inline-block; background: white; border: 2px solid #667eea; color: #667eea; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 16px; margin: 10px 0; }}
+                .button {{ display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 24px 0; font-size: 16px; font-weight: bold; }}
+                .footer {{ text-align: center; margin-top: 20px; color: #999; font-size: 12px; }}
+                .divider {{ border: none; border-top: 1px solid #eee; margin: 20px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>👥 Team Invitation</h1>
+                    <p>You've been invited to collaborate on TaskFlow</p>
+                </div>
+                <div class="content">
+                    <p>Hi there,</p>
+                    <p><strong>{inviter_name}</strong> has invited you to join their team:</p>
+                    <center><div class="team-badge">🏢 {team_name}</div></center>
+                    <p>You'll be joining as a <strong>{role.capitalize()}</strong>.</p>
+                    <p>Click the button below to accept the invitation and get started:</p>
+                    <center>
+                        <a href="{invite_url}" class="button">Accept Invitation →</a>
+                    </center>
+                    <hr class="divider">
+                    <p style="color:#666; font-size:13px;">
+                        If the button doesn't work, copy and paste this link into your browser:<br>
+                        <span style="color:#667eea; word-break:break-all;">{invite_url}</span>
+                    </p>
+                    <p style="color:#999; font-size:12px;">
+                        This invitation will expire in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>© 2026 TaskFlow. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = (
+            f"Hi,\n\n"
+            f"{inviter_name} has invited you to join the '{team_name}' team on TaskFlow as a {role}.\n\n"
+            f"Accept the invitation here:\n{invite_url}\n\n"
+            f"This invitation expires in 7 days.\n\n"
+            f"© 2026 TaskFlow"
+        )
+
+        return await self.send_email(
+            to_email=to_email,
+            subject=f"You're invited to join '{team_name}' on TaskFlow",
+            html_content=html_content,
+            text_content=text_content,
+        )
+
+
 # Global email service instance
 email_service = EmailService()
+
