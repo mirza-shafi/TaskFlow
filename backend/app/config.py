@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     reset_token_expire_hours: int = 1
 
     # Firebase / Google OAuth Configuration
+    firebase_credentials_json: str = ""
     firebase_service_account_path: str = os.path.join(_BACKEND_DIR, "firebase-service-account.json")
     
     model_config = SettingsConfigDict(
