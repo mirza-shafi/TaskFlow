@@ -20,20 +20,24 @@ A modern, full-stack task management application with enterprise-grade authentic
 ### Core Functionality
 - ✅ **Task Management** - Create, update, delete, and organize tasks with collaboration
 - 📝 **Notes** - Rich text notes with Markdown support, pinning, favorites, and folders
-- 🎯 **Habit Tracking (New!)** - Build habits with advanced analytics:
+- 👥 **Team Workspaces (New!)** - Real-time team collaboration environments:
+    - **Shared Tasks & Notes**: Everything created within a team workspace is automatically shared with members.
+    - **Role-based Access**: Owner, Admin, and Member roles with different permissions.
+    - **Task Assignment**: Assign tasks to specific team members.
+    - **Activity Tracking**: Track who created, edited, or deleted resources in the team.
+- 🎯 **Habit Tracking** - Build habits with advanced analytics:
     - **GitHub-style Heatmap**: Visual calendar of your consistency.
     - **Streaks**: Track current and best streaks.
     - **Reminders**: Set daily notification times.
-    - **Social Feed**: View activity from friends/accountability partners.
 - 📁 **Folder Organization** - Group tasks and notes into custom folders
-- 👥 **Team Collaboration** - Share tasks, notes, and folders with team members
 - 📅 **Due Dates & Priorities** - Set deadlines and priority levels (High/Med/Low)
 - 🏷️ **Tags** - Categorize content with custom tags
 - 🗑️ **Soft Delete** - Recover deleted items from the trash
 - 📊 **Analytics** - Comprehensive dashboard with completion rates and productivity insights
 
 ### Advanced Authentication 🔐
-- 📧 **Real-time Email Validation** - Live domain and MX record deliverability checking
+- 🌐 **Google Login (Firebase)** - One-click authentication with Google OAuth
+- 📧 **Resend Email Integration** - Deliver team invitations and password reset emails reliably
 - 🔑 **Password Reset** - Secure reset flow via email
 - 🎫 **Dual Token System** - Short-lived Access Tokens (15m) + Long-lived Refresh Tokens (30d)
 - 📱 **Session Management** - View and revoke active sessions across devices
@@ -272,14 +276,22 @@ This application is configured for easy deployment on modern cloud platforms.
 3. Set Environment to `Python 3`.
 4. Set Build Command: `pip install -r requirements.txt`.
 5. Set Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-6. Add all environment variables from your local `.env` (ensure `PYTHON_VERSION` is set to `3.12.0`).
+6. Add the following key environment variables:
+   - `MONGO_URI`: Your MongoDB connection string.
+   - `JWT_SECRET`: A long secure random string.
+   - `FIREBASE_CREDENTIALS_JSON`: The entire raw JSON content of your `firebase-service-account.json`.
+   - `RESEND_API_KEY`: Your Resend API Key for sending emails.
+   - `EMAIL_FROM`: `onboarding@resend.dev` (or your verified domain).
+   - `FRONTEND_URL`: Your Vercel frontend URL (e.g. `https://task-flow.mirzashafi.com`).
 
 **Frontend (Vercel)**
 1. Create a new Project on Vercel linked to this repository.
 2. Set Root Directory to `client`.
 3. Framework Preset will automatically be detected as `Vite`.
-4. Add the Environment Variable: `VITE_API_BASE_URL` = `https://<YOUR-RENDER-URL>/api/v1`.
-5. Deploy! (Don't forget to add your Vercel URL to the `CORS_ORIGINS` in your Render backend settings).
+4. Add the necessary Environment Variables:
+   - `VITE_API_BASE_URL` = `https://<YOUR-RENDER-URL>/api/v1`
+   - All `VITE_FIREBASE_*` variables from your local `.env` file for Google Auth.
+5. Deploy! Vercel handles SPA routing seamlessly thanks to the included `client/vercel.json` rewrite rules.
 
 ---
 
